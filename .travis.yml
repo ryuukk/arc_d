@@ -1,0 +1,46 @@
+os:
+  - linux
+  - osx
+
+language: d
+
+dist: trusty
+sudo: false
+
+addons:
+  apt:
+    packages:
+      #- libfreetype6-dev
+      #- libgl1-mesa-dev
+      #- libglew-dev
+      #- libjpeg8-dev
+      - libopenal-dev
+      #- libpthread-stubs0-dev
+      #- libsndfile1-dev
+      #- libx11-dev
+      #- libx11-xcb-dev
+      #- libxrandr-dev
+      #- libxcb-image0-dev
+      #- libxcb-randr0-dev
+      #- libudev-dev
+      #- libvorbis-dev
+      #- libflac-dev
+
+d:
+ - dmd-2.085.0
+
+matrix:
+  exclude:
+#  - os: osx
+#    d: gdc-6.3.0
+#  - os: osx
+#    d: gdc-5.4.0
+  - os: osx
+    d: gdc-4.9.4
+  - os: osx
+    d: gdc-4.8.5
+
+install:
+
+script:
+  - dub build :arc -c=ci -a=x86_64

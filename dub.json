@@ -1,0 +1,20 @@
+{
+	"name": "arc_d",
+	"authors": [
+		"ryuukk_"
+	],
+	"description": "game framework",
+	"copyright": "Copyright © 2019, ryuukk_",
+	"license": "proprietary",
+	"targetType": "none",
+	"subPackages": [
+		"arc",
+		"samples/00_common",
+		"samples/01_hello",
+		"samples/02_input",
+		"samples/03_triangle",
+		"samples/04_textured_quad",
+		"samples/05_spritebatch",
+		"samples/06_cube"
+	]
+}
