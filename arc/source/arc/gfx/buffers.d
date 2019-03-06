@@ -168,9 +168,9 @@ public class VertexBuffer
 
     public this(bool _isStatic, int numVerticies, VertexAttributes _attributes)
     {
-        this._isStatic = _isStatic;
-        this._attributes = _attributes;
-        this._vertices.length = numVerticies * (_attributes.vertexSize/4);
+        _isStatic = _isStatic;
+        _attributes = _attributes;
+        _vertices.length = numVerticies * (_attributes.vertexSize/4);
 
         glGenBuffers(1, &_bufferHandle);
         _usage = _isStatic ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW;
@@ -192,7 +192,7 @@ public class VertexBuffer
     {
         _isDirty = true;
 
-        this._vertices = vertices[offset..offset+count];
+        _vertices = vertices[offset..offset+count];
         bufferChanged();
     }
 
@@ -225,7 +225,7 @@ public class VertexBuffer
 
     private void bindAttributes(ShaderProgram shader, int[] locations)
     {
-        auto stillValid = this._cachedLocations.length != 0;
+        auto stillValid = _cachedLocations.length != 0;
         auto numAttributes = _attributes.size();
 
         if (stillValid)
@@ -236,15 +236,15 @@ public class VertexBuffer
                 {
                     VertexAttribute attribute = _attributes.get(i);
                     int location = shader.getAttributeLocation(attribute.aliass);
-                    stillValid = location == this._cachedLocations[i];
+                    stillValid = location == _cachedLocations[i];
                 }
             }
             else
             {
-                stillValid = locations.length == this._cachedLocations.length;
+                stillValid = locations.length == _cachedLocations.length;
                 for (int i = 0; stillValid && i < numAttributes; i++)
                 {
-                    stillValid = locations[i] == this._cachedLocations[i];
+                    stillValid = locations[i] == _cachedLocations[i];
                 }
             }
         }
@@ -253,21 +253,21 @@ public class VertexBuffer
         {
             glBindBuffer(GL_ARRAY_BUFFER, _bufferHandle);
             unbindAttributes(shader);
-            this._cachedLocations.length = 0;
+            _cachedLocations.length = 0;
 
             for (int i = 0; i < numAttributes; i++)
             {
                 VertexAttribute attribute = _attributes.get(i);
                 if (locations == null)
                 {
-                    this._cachedLocations ~= (shader.getAttributeLocation(attribute.aliass));
+                    _cachedLocations ~= (shader.getAttributeLocation(attribute.aliass));
                 }
                 else
                 {
-                    this._cachedLocations ~= (locations[i]);
+                    _cachedLocations ~= (locations[i]);
                 }
 
-                int location = this._cachedLocations[i];
+                int location = _cachedLocations[i];
                 if (location < 0)
                 {
                     continue;
@@ -276,9 +276,6 @@ public class VertexBuffer
                 shader.enableVertexAttribute(location);
                 shader.setVertexAttribute(location, attribute.numComponents, attribute.type, attribute.normalized, _attributes
                         .vertexSize, attribute.offset);
-
-                writeln(format("L: %s N: %s T: %s N: %s VS: %s OFF: %s", location, attribute.numComponents, attribute
-                        .type, attribute.normalized, _attributes.vertexSize, attribute.offset));
             }
         }
     }
