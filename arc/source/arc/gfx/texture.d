@@ -101,7 +101,7 @@ public abstract class GLTexture
 
     public void bind()
     {
-        glBindTexture(GL_TEXTURE_2D, glHandle);
+        glBindTexture(glTarget, glHandle);
     }
 
     public void bind(int unit)
