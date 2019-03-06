@@ -1,5 +1,7 @@
 module arc.gfx.batch;
 
+import std.algorithm.comparison : min, max;
+
 import std.stdio;
 import std.format;
 
@@ -89,8 +91,6 @@ public class SpriteBatch
                 new VertexAttribute(Usage.TextureCoordinates, 2, "a_texCoord0"));
 
         _projectionMatrix = Mat4.createOrthographicOffCenter(0f, 0f, Core.graphics.getWidth(), Core.graphics.getHeight());
-
-
 
         _vertices.length = size * 20;
         for (int i = 0; i < _vertices.length; i++)
@@ -216,7 +216,6 @@ public class SpriteBatch
         _invTexHeight = 1.0f / texture.getHeight();
     }
 
-
     public void draw(Texture2D texture, float x, float y, float width, float height)
     {
         assert(_drawing, "must call begin");
@@ -234,7 +233,6 @@ public class SpriteBatch
         float v2 = 0;
 
         float color = _color.toFloatBits();
-
 
         int idx = _idx;
         _vertices[idx] = x;
@@ -262,6 +260,46 @@ public class SpriteBatch
         _vertices[idx + 19] = v;
 
         _idx = idx + 20;
+    }
+
+    public void draw(Texture2D texture, float[] v, int offset, int count)
+    {
+        assert(_drawing, "must call begin");
+
+        int verticesLength = cast(int) _vertices.length;
+        int remainingVertices = verticesLength;
+        if (texture != _lastTexture)
+            switchTexture(texture);
+        else
+        {
+            remainingVertices -= _idx;
+            if (remainingVertices == 0)
+            {
+                flush();
+                remainingVertices = verticesLength;
+            }
+        }
+        int copyCount = min(remainingVertices, count);
+
+        // arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
+        // arraycopy(v, offset, vertices, idx, copyCount);
+        _vertices[_idx .. copyCount] = v[offset .. copyCount];
+
+        _idx += copyCount;
+        count -= copyCount;
+        while (count > 0)
+        {
+            offset += copyCount;
+            flush();
+            copyCount = min(verticesLength, count);
+
+            // arraycopy(Object src, int srcPos, Object dest, int destPos, int length)
+            // arraycopy(v, offset, vertices, 0, copyCount);
+            _vertices[0 .. copyCount] = v[offset .. copyCount];
+
+            _idx += copyCount;
+            count -= copyCount;
+        }
     }
 
     public bool isBlendingEnabled()
