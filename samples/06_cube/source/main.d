@@ -21,24 +21,31 @@ string vs = "
 #version 330
 
 in vec3 a_position;
+in vec3 a_normal;
 
 uniform mat4 u_proj;
 uniform mat4 u_view;
 uniform mat4 u_world;
 
+out vec3 v_normal;
+
 void main()
 {
     gl_Position = u_proj * u_view * u_world * vec4(a_position, 1.0);
+
+    v_normal = a_normal;
 }
 ";
 string fs = "
 #version 330
 
+in vec3 v_normal;
+
 out vec4 f_color;
 
 void main()
 {
-	f_color = vec4(1.0, 0.0, 0.0, 1.0);
+	f_color = vec4(1.0, 1.0, 1.0, 1.0) * vec4(v_normal, 1.0);
 }
 ";
 
@@ -48,19 +55,23 @@ public class MyGame : IApp
     Mesh _mesh;
     ShaderProgram _shader;
     Mat4 _cubeTransform = Mat4.identity;
+    float _a = 0f;
+
     public void create()
     {
-        _cam = new PerspectiveCamera(64, Core.graphics.getWidth(), Core.graphics.getHeight());
+        _cam = new PerspectiveCamera(67, Core.graphics.getWidth(), Core.graphics.getHeight());
         _cam.near = 1f;
         _cam.far = 100f;
-        _cam.position = Vec3(0, 10, 5) * 1.25f;
+        _cam.position = Vec3(0, 10, 5)*0.5f;
         _cam.lookAt(0, 0, 0);
         _cam.update();
 
         _shader = new ShaderProgram(vs, fs);
         assert(_shader.isCompiled(), _shader.getLog());
 
-        _mesh = new Mesh(true, 3, 3, new VertexAttribute(Usage.Position, 3, "a_position"));
+        _mesh = new Mesh(true, 24, 36, 
+        new VertexAttribute(Usage.Position, 3, "a_position"),
+        new VertexAttribute(Usage.Normal, 3, "a_normal"));
 
         float[] cubeVerts = [-0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f,
             -0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, 0.5f, -0.5f, -0.5f, -0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f,
@@ -68,28 +79,29 @@ public class MyGame : IApp
             -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f, -0.5f, 0.5f, -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f, 0.5f, 0.5f,
             0.5f, 0.5f, -0.5f];
 
-        //float[] cubeNormals = {0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,
-        //	1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-        //	-1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f,
-        //	-1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f,};
+        float[] cubeNormals = [0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, -1.0f, 0.0f, 0.0f, -1.0f,
+            0.0f, 0.0f, -1.0f, 0.0f, 0.0f, -1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 0.0f,
+            0.0f];
 
         //float[] cubeTex = {0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 1.0f, 1.0f, 0.0f, 1.0f, 0.0f, 0.0f, 0.0f,
         //	0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f,
         //	1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,};
 
         float[] vertices;
-        vertices.length = 24 * 3; // 8
+        vertices.length = 24 * 6; // 8
         int pIdx = 0;
-        //int nIdx = 0;
+        int nIdx = 0;
         //int tIdx = 0;
         for (int i = 0; i < vertices.length;)
         {
             vertices[i++] = cubeVerts[pIdx++];
             vertices[i++] = cubeVerts[pIdx++];
             vertices[i++] = cubeVerts[pIdx++];
-            //vertices[i++] = cubeNormals[nIdx++];
-            //vertices[i++] = cubeNormals[nIdx++];
-            //vertices[i++] = cubeNormals[nIdx++];
+            vertices[i++] = cubeNormals[nIdx++];
+            vertices[i++] = cubeNormals[nIdx++];
+            vertices[i++] = cubeNormals[nIdx++];
             //vertices[i++] = cubeTex[tIdx++];
             //vertices[i++] = cubeTex[tIdx++];
         }
@@ -101,15 +113,20 @@ public class MyGame : IApp
         _mesh.setIndices(indices);
     }
 
+
     public void update(float dt)
     {
-        _cubeTransform.rotate(30 * dt, 0, 1, 0);
+        _a += dt * 10;
+
+        _cubeTransform.set(Vec3(), Quat.fromAxis(1,1,1, _a));
     }
 
     public void render(float dt)
     {
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
+
+        glEnable(GL_DEPTH_TEST);
 
         _cam.update();
 
@@ -119,6 +136,7 @@ public class MyGame : IApp
         _shader.setUniformMat4("u_world", _cubeTransform);
 
         _mesh.render(_shader, GL_TRIANGLES);
+
         _shader.end();
     }
 

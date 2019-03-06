@@ -1,8 +1,9 @@
 #!/bin/bash
 
-BUILD_TARGET=debug
-ARCH=x86_64
+BUILD_TARGET=debug # debug, release, profile, profile_gc
+ARCH=x86_64 # x86, x86_64
 COMPILER=dmd # ldc2, dmd
+# FLAGS= "dflags-dmd": ["-vgc"],
 
 echo "Wich sample to run:"
 
