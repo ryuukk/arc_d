@@ -5,10 +5,9 @@ import std.format;
 
 import bindbc.opengl;
 
+import arc.math;
 import arc.gfx.shader;
 import arc.gfx.buffers;
-
-
 
 public class Mesh
 {
@@ -118,4 +117,17 @@ public class Mesh
     {
         return _indices.getNumMaxIndices();
     }
+}
+
+public class MeshPart
+{
+    public string id;
+    public int primitiveType;
+    public int offset;
+    public int size;
+    public Mesh mesh;
+
+    public Vec3 center;
+    public Vec3 halfExtents;
+    public float radius = -1;
 }

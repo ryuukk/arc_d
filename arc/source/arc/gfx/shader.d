@@ -8,6 +8,8 @@ import core.math;
 import bindbc.opengl;
 
 import arc.gfx.camera;
+import arc.gfx.rendering;
+import arc.gfx.mesh;
 import arc.math;
 
 public interface IShader
@@ -308,9 +310,4 @@ public class ShaderProgram
 
 public class Renderable
 {
-}
-
-public class RenderContext
-{
-
 }
