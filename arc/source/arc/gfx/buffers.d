@@ -166,11 +166,11 @@ public class VertexBuffer
     private float[] _vertices;
     private int[] _cachedLocations;
 
-    public this(bool _isStatic, int numVerticies, VertexAttributes _attributes)
+    public this(bool isStatic, int numVerticies, VertexAttributes attributes)
     {
-        _isStatic = _isStatic;
-        _attributes = _attributes;
-        _vertices.length = numVerticies * (_attributes.vertexSize/4);
+        _isStatic = isStatic;
+        _attributes = attributes;
+        _vertices.length = numVerticies * (attributes.vertexSize/4);
 
         glGenBuffers(1, &_bufferHandle);
         _usage = _isStatic ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW;
