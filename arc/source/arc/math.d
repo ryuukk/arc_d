@@ -6,7 +6,9 @@ import std.format;
 import std.conv;
 import std.string;
 
+public const float FLOAT_ROUNDING_ERROR = 0.000001f;
 public const float PI = 3.1415927f;
+public const float PI2 = PI * 2;
 public const float DEG2RAD = PI / 180.0f;
 public const float RAD2DEG = 180.0f / PI;
 
@@ -24,9 +26,9 @@ public struct Vec2
 
 public struct Vec3
 {
-    public float x;
-    public float y;
-    public float z;
+    public float x = 0f;
+    public float y = 0f;
+    public float z = 0f;
 
     
     public static @property Vec3 X() { return Vec3(1, 0, 0); }
@@ -117,6 +119,11 @@ public struct Vec3
         else
             static assert(0, "Operator " ~ op ~ " not implemented");
     }
+
+    public static float len(float x, float y, float z)
+    {
+        return sqrt(x * x + y * y + z * z);
+    }
 }
 
 public struct Vec4
@@ -126,6 +133,15 @@ public struct Vec4
     public float z;
     public float w;
 }
+
+/*
+OPENGL is COLUMN MAJOR !!!!
+| 0 2 |    | 0 3 6 |    |  0  4  8 12 |
+| 1 3 |    | 1 4 7 |    |  1  5  9 13 |
+           | 2 5 8 |    |  2  6 10 14 |
+                        |  3  7 11 15 |
+
+*/
 
 public struct Mat4
 {
@@ -178,7 +194,7 @@ public struct Mat4
         return ret;
     }
 
-    public void idt()
+    public Mat4 idt()
     {
         val[M00] = 1f;
         val[M01] = 0f;
@@ -196,41 +212,131 @@ public struct Mat4
         val[M31] = 0f;
         val[M32] = 0f;
         val[M33] = 1f;
+        return this;
     }
 
     public void rotate(float angle, float x, float y, float z)
     {
+        import  std.algorithm.comparison: clamp;
+        
         float c = cos(angle * DEG2RAD); // cosine
         float s = sin(angle * DEG2RAD); // sine
         float c1 = 1.0f - c; // 1 - c
-        float m0 = val[0], m4 = val[4], m8 = val[8], m12 = val[12], m1 = val[1], m5 = val[5], m9 = val[9], m13 = val[13], m2 = val[2], m6 = val[
-        6], m10 = val[10], m14 = val[14];
+        float m0 = val[0], m4 = val[4], m8 = val[8], m12 = val[12], m1 = val[1], m5 = val[5], m9 = val[9], m13 = val[13], m2 = val[
+        2], m6 = val[6], m10 = val[10], m14 = val[14];
 
         // build rotation matrix
-        float r0 = x * x * c1 + c;
-        float r1 = x * y * c1 + z * s;
-        float r2 = x * z * c1 - y * s;
-        float r4 = x * y * c1 - z * s;
-        float r5 = y * y * c1 + c;
-        float r6 = y * z * c1 + x * s;
-        float r8 = x * z * c1 + y * s;
-        float r9 = y * z * c1 - x * s;
-        float r10 = z * z * c1 + c;
+        float r0 =  clamp( x * x * c1 + c    , -1, 1);
+        float r1 =  clamp( x * y * c1 + z * s, -1, 1);
+        float r2 =  clamp( x * z * c1 - y * s, -1, 1);
+        float r4 =  clamp( x * y * c1 - z * s, -1, 1);
+        float r5 =  clamp( y * y * c1 + c    , -1, 1);
+        float r6 =  clamp( y * z * c1 + x * s, -1, 1);
+        float r8 =  clamp( x * z * c1 + y * s, -1, 1);
+        float r9 =  clamp( y * z * c1 - x * s, -1, 1);
+        float r10 = clamp( z * z * c1 + c    , -1, 1);
 
         // multiply rotation matrix
-        val[0] = r0 * m0 + r4 * m1 + r8 * m2;
-        val[1] = r1 * m0 + r5 * m1 + r9 * m2;
-        val[2] = r2 * m0 + r6 * m1 + r10* m2;
-        val[4] = r0 * m4 + r4 * m5 + r8 * m6;
-        val[5] = r1 * m4 + r5 * m5 + r9 * m6;
-        val[6] = r2 * m4 + r6 * m5 + r10* m6;
-        val[8] = r0 * m8 + r4 * m9 + r8 * m10;
-        val[9] = r1 * m8 + r5 * m9 + r9 * m10;
-        val[10]= r2 * m8 + r6 * m9 + r10* m10;
-        val[12]= r0 * m12+ r4 * m13+ r8 * m14;
-        val[13]= r1 * m12+ r5 * m13+ r9 * m14;
-        val[14]= r2 * m12+ r6 * m13+ r10* m14;
 
+        val[0] =   (r0 * m0 + r4 * m1 + r8 *  m2   );
+        val[1] =   (r1 * m0 + r5 * m1 + r9 *  m2   );
+        val[2] =   (r2 * m0 + r6 * m1 + r10 * m2   );
+        val[4] =   (r0 * m4 + r4 * m5 + r8 *  m6   );
+        val[5] =   (r1 * m4 + r5 * m5 + r9 *  m6   );
+        val[6] =   (r2 * m4 + r6 * m5 + r10 * m6   );
+        val[8] =   (r0 * m8 + r4 * m9 + r8 *  m10  );
+        val[9] =   (r1 * m8 + r5 * m9 + r9 *  m10  );
+        val[10] =  (r2 * m8 + r6 * m9 + r10 * m10  );
+        val[12] =  (r0 * m12 + r4 * m13 + r8 * m14 );
+        val[13] =  (r1 * m12 + r5 * m13 + r9 * m14 );
+        val[14] =  (r2 * m12 + r6 * m13 + r10 * m14);
+
+    }
+
+    public void set(float translationX, float translationY, float translationZ, float quaternionX, float quaternionY, float quaternionZ,
+            float quaternionW)
+    {
+        float xs = quaternionX * 2f, ys = quaternionY * 2f, zs = quaternionZ * 2f;
+        float wx = quaternionW * xs, wy = quaternionW * ys, wz = quaternionW * zs;
+        float xx = quaternionX * xs, xy = quaternionX * ys, xz = quaternionX * zs;
+        float yy = quaternionY * ys, yz = quaternionY * zs, zz = quaternionZ * zs;
+
+        val[M00] = (1.0f - (yy + zz));
+        val[M01] = (xy - wz);
+        val[M02] = (xz + wy);
+        val[M03] = translationX;
+
+        val[M10] = (xy + wz);
+        val[M11] = (1.0f - (xx + zz));
+        val[M12] = (yz - wx);
+        val[M13] = translationY;
+
+        val[M20] = (xz - wy);
+        val[M21] = (yz + wx);
+        val[M22] = (1.0f - (xx + yy));
+        val[M23] = translationZ;
+
+        val[M30] = 0.0f;
+        val[M31] = 0.0f;
+        val[M32] = 0.0f;
+        val[M33] = 1.0f;
+    }
+
+    public void set(Vec3 translation, Quat quat)
+    {
+        float xs = quat.x * 2f, ys = quat.y * 2f, zs = quat.z * 2f;
+        float wx = quat.w * xs, wy = quat.w * ys, wz = quat.w * zs;
+        float xx = quat.x * xs, xy = quat.x * ys, xz = quat.x * zs;
+        float yy = quat.y * ys, yz = quat.y * zs, zz = quat.z * zs;
+
+        val[M00] = (1.0f - (yy + zz));
+        val[M01] = (xy - wz);
+        val[M02] = (xz + wy);
+        val[M03] = translation.x;
+
+        val[M10] = (xy + wz);
+        val[M11] = (1.0f - (xx + zz));
+        val[M12] = (yz - wx);
+        val[M13] = translation.y;
+
+        val[M20] = (xz - wy);
+        val[M21] = (yz + wx);
+        val[M22] = (1.0f - (xx + yy));
+        val[M23] = translation.z;
+
+        val[M30] = 0.0f;
+        val[M31] = 0.0f;
+        val[M32] = 0.0f;
+        val[M33] = 1.0f;
+    }
+
+    public void set(float translationX, float translationY, float translationZ, float quaternionX, float quaternionY, float quaternionZ,
+            float quaternionW, float scaleX, float scaleY, float scaleZ)
+    {
+        float xs = quaternionX * 2f, ys = quaternionY * 2f, zs = quaternionZ * 2f;
+        float wx = quaternionW * xs, wy = quaternionW * ys, wz = quaternionW * zs;
+        float xx = quaternionX * xs, xy = quaternionX * ys, xz = quaternionX * zs;
+        float yy = quaternionY * ys, yz = quaternionY * zs, zz = quaternionZ * zs;
+
+        val[M00] = scaleX * (1.0f - (yy + zz));
+        val[M01] = scaleY * (xy - wz);
+        val[M02] = scaleZ * (xz + wy);
+        val[M03] = translationX;
+
+        val[M10] = scaleX * (xy + wz);
+        val[M11] = scaleY * (1.0f - (xx + zz));
+        val[M12] = scaleZ * (yz - wx);
+        val[M13] = translationY;
+
+        val[M20] = scaleX * (xz - wy);
+        val[M21] = scaleY * (yz + wx);
+        val[M22] = scaleZ * (1.0f - (xx + yy));
+        val[M23] = translationZ;
+
+        val[M30] = 0.0f;
+        val[M31] = 0.0f;
+        val[M32] = 0.0f;
+        val[M33] = 1.0f;
     }
 
     public static Mat4 createOrthographicOffCenter(float x, float y, float width, float height)
@@ -298,6 +404,18 @@ public struct Mat4
         // todo: finish
         return Mat4();
     }
+
+    
+    public static Mat4 createScale(float x, float y, float z)
+    {
+        auto ret = Mat4.identity;
+		ret.val[M00] = x;
+		ret.val[M11] = y;
+		ret.val[M22] = z;
+        return ret;
+    }
+
+    
 
     public static Mat4 createProjection(float near, float far, float fovy, float aspectRatio)
     {
@@ -379,6 +497,51 @@ public struct Quat
         this.z = z;
         this.w = w;
     }
+
+	public float len2 () 
+    {
+		return x * x + y * y + z * z + w * w;
+	}
+
+    public ref Quat nor()
+    {
+		float len = len2();
+		if (len != 0.0f && !isEqual(len, 1f))
+        {
+			len = sqrt(len);
+			w /= len;
+			x /= len;
+			y /= len;
+			z /= len;
+		}
+        return this;
+    }
     
-    public static @property Quat identify() { return Quat(0,0,0,1); }
+    public static @property Quat identity() { return Quat(0,0,0,1); }
+
+    public static Quat fromAxis(float x, float y, float z, float rad)
+    {
+		float d = Vec3.len(x, y, z);
+		if (d == 0f) return Quat.identity;
+		d = 1f / d;
+		float l_ang = rad < 0 ? PI2 - (-rad % PI2) : rad % PI2;
+		float l_sin = sin(l_ang / 2);
+		float l_cos = cos(l_ang / 2);
+
+        return Quat(d * x * l_sin, d * y * l_sin, d * z * l_sin, l_cos).nor();
+    }
+}
+
+
+public struct BoundingBox
+{
+    public Vec3 min;
+    public Vec3 max;
+    public Vec3 cnt;
+    public Vec3 dim;
+}
+
+bool isEqual(float a, float b)
+{
+    return abs(a - b) <= FLOAT_ROUNDING_ERROR;
 }
