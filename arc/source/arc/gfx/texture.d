@@ -260,7 +260,7 @@ public class Texture2D : GLTexture
 }
 
 
-public class TextureDescriptor(T) if (T is GLTexture) 
+public class TextureDescriptor(T)
 {
     public T texture;
 	public TextureFilter minFilter;

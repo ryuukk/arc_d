@@ -7,6 +7,12 @@
 	"copyright": "Copyright © 2019, ryuukk_",
 	"license": "proprietary",
 	"targetType": "none",
+	
+	"lflags":[
+		"-subsystem:windows",
+		"-entry:mainCRTStartup"
+	],
+
 	"subPackages": [
 		"arc",
 		"samples/00_common",
@@ -15,6 +21,7 @@
 		"samples/03_triangle",
 		"samples/04_textured_quad",
 		"samples/05_spritebatch",
-		"samples/06_cube"
+		"samples/06_cube",
+		"samples/07_model"
 	]
 }

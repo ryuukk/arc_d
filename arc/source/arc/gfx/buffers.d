@@ -103,6 +103,46 @@ public class VertexAttributes
 
 public class VertexAttribute
 {
+    public static VertexAttribute position()
+    {
+        return new VertexAttribute(Usage.Position, 3, ShaderProgram.POSITION_ATTRIBUTE);
+    }
+
+    public static VertexAttribute normal()
+    {
+        return new VertexAttribute(Usage.Normal, 3, ShaderProgram.NORMAL_ATTRIBUTE);
+    }
+
+    public static VertexAttribute colorPacked()
+    {
+        return new VertexAttribute(Usage.ColorPacked, 4, ShaderProgram.COLOR_ATTRIBUTE);
+    }
+
+    public static VertexAttribute colorUnpacked()
+    {
+        return new VertexAttribute(Usage.ColorUnpacked, 4, ShaderProgram.COLOR_ATTRIBUTE);
+    }
+
+    public static VertexAttribute tangent()
+    {
+        return new VertexAttribute(Usage.Tangent, 3, ShaderProgram.TANGENT_ATTRIBUTE);
+    }
+
+    public static VertexAttribute binormal()
+    {
+        return new VertexAttribute(Usage.BiNormal, 3, ShaderProgram.BINORMAL_ATTRIBUTE);
+    }
+
+    public static VertexAttribute boneWeight(int unit)
+    {
+        return new VertexAttribute(Usage.BoneWeight, 2, format("%s%s", ShaderProgram.BONEWEIGHT_ATTRIBUTE, unit), unit);
+    }
+
+    public static VertexAttribute texCoords(int unit)
+    {
+        return new VertexAttribute(Usage.TextureCoordinates, 2, format("%s%s", ShaderProgram.TEXCOORD_ATTRIBUTE, unit), unit);
+    }
+
     public int usage;
     public int numComponents;
     public bool normalized;
@@ -170,7 +210,7 @@ public class VertexBuffer
     {
         _isStatic = isStatic;
         _attributes = attributes;
-        _vertices.length = numVerticies * (attributes.vertexSize/4);
+        _vertices.length = numVerticies * (attributes.vertexSize / 4);
 
         glGenBuffers(1, &_bufferHandle);
         _usage = _isStatic ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW;
@@ -180,19 +220,19 @@ public class VertexBuffer
 
     public int getNumVertices()
     {
-        return cast(int) _vertices.length / (_attributes.vertexSize/4);
+        return cast(int) _vertices.length / (_attributes.vertexSize / 4);
     }
 
     public int getNumMaxVertices()
     {
-        return cast(int) _vertices.length / (_attributes.vertexSize/4);
+        return cast(int) _vertices.length / (_attributes.vertexSize / 4);
     }
 
     public void setVertices(float[] vertices, int offset, int count)
     {
         _isDirty = true;
 
-        _vertices = vertices[offset..offset+count];
+        _vertices = vertices[offset .. offset + count];
         bufferChanged();
     }
 
@@ -477,7 +517,7 @@ public class IndexBuffer
     {
         _isDirty = true;
         _buffer.length = count;
-        _buffer = indices[offset..offset+count];
+        _buffer = indices[offset .. offset + count];
         if (_isBound)
         {
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, _buffer.length * 2, _buffer.ptr, _usage);
@@ -490,7 +530,8 @@ public class IndexBuffer
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bufferHandle);
         if (_isDirty)
         {
-            writeln(format("IndexBuffer was dirty, update data, l: %s s: %s sizeof: %s", _buffer.length, _buffer.length * 2, _buffer.sizeof));
+            writeln(format("IndexBuffer was dirty, update data, l: %s s: %s sizeof: %s", _buffer.length, _buffer.length * 2,
+                    _buffer.sizeof));
 
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, _buffer.length * 2, _buffer.ptr, _usage);
             _isDirty = false;

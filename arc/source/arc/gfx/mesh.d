@@ -26,6 +26,16 @@ public class Mesh
         _indices = new IndexBuffer(isStatic, maxIndices);
         _isVertexArray = false;
     }
+    public this(bool isStatic, int maxVertices, int maxIndices, VertexAttributes attributes)
+    {
+        // todo: for the moment max vertices/indices have no effect, since when created, it'll use what ever length the vertices data will have
+        // this can be problematic since we can have dynamic meshes
+        // what if the new update is larger than what was used to create it ?
+        // i should define the max then check before uploading data
+        _vertices = new VertexBuffer(isStatic, maxVertices, attributes);
+        _indices = new IndexBuffer(isStatic, maxIndices);
+        _isVertexArray = false;
+    }
 
     public void bind(ShaderProgram shader, int[] locations)
     {
@@ -130,4 +140,9 @@ public class MeshPart
     public Vec3 center;
     public Vec3 halfExtents;
     public float radius = -1;
+
+    public void update()
+    {
+        // todo: update bounds
+    }
 }

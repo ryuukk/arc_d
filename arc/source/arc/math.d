@@ -215,6 +215,12 @@ public struct Mat4
         return this;
     }
 
+    public float det3x3() 
+    {
+		return val[M00] * val[M11] * val[M22] + val[M01] * val[M12] * val[M20] + val[M02] * val[M10] * val[M21] - val[M00]
+			* val[M12] * val[M21] - val[M01] * val[M10] * val[M22] - val[M02] * val[M11] * val[M20];
+	}
+
     public void rotate(float angle, float x, float y, float z)
     {
         import  std.algorithm.comparison: clamp;
@@ -529,6 +535,11 @@ public struct Quat
 		float l_cos = cos(l_ang / 2);
 
         return Quat(d * x * l_sin, d * y * l_sin, d * z * l_sin, l_cos).nor();
+    }
+
+    public static Quat fromAxis(in Vec3 axis, float rad)
+    {
+        return fromAxis(axis.x, axis.y, axis.z, rad);
     }
 }
 
