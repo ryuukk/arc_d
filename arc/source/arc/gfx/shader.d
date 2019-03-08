@@ -207,7 +207,11 @@ public class ShaderProgram
             _uniformTypes[name] = type;
             _uniformSizes[name] = size;
             _uniformNames[i] = name;
-            writeln("UNIFORM: ", name);
+
+            version(DEBUG_SHADER)
+            {
+                writeln("UNIFORM: ", name);
+            }
         }
     }
 
@@ -228,7 +232,10 @@ public class ShaderProgram
     {
         if (_invalidated)
         {
-            writeln("Recompile shader");
+            version(DEBUG_SHADER)
+            {
+                writeln("Recompile shader");
+            }
             compileShaders(_vertexShaderSource, _fragmentShaderSource);
             _invalidated = false;
         }
@@ -292,7 +299,11 @@ public class ShaderProgram
         int location = _uniforms.get(name, -2);
         if (location == -2)
         {
-            writeln(format("Uniform not cached yet: %s", name));
+            version(DEBUG_SHADER)
+            {
+                writeln(format("Uniform not cached yet: %s", name));
+            }
+
             location = glGetUniformLocation(_program, name.ptr);
             if (location == -1 && pedantic)
                 throw new Exception(format("no uniform with name '%s' in shader", name));
@@ -621,12 +632,15 @@ public class DefaultShaderProvider : BaseShaderProvider
         vs ~= config.vertexShader;
         fs ~= config.fragmentShader;
 
-        writeln("---");
+        version(DEBUG_SHADER_REFIX)
+        {
+            writeln("---");
 
-        writeln("PREFIX:");
-        writeln(prefix);
+            writeln("PREFIX:");
+            writeln(prefix);
 
-        writeln("---");
+            writeln("---");
+        }
 
         ShaderProgram program = new ShaderProgram(vs, fs);
         assert(program.isCompiled(), program.getLog());
