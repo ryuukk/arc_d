@@ -36,16 +36,12 @@ public class ModelInstance : IRenderableProvider
     {
         nodes.length = model.nodes.length;
 
-        if(model.nodes.length == 0)
-        {
-            writeln("INFO: 0 nodes to copy");
-        }
-
         for (int i = 0; i < model.nodes.length; i++)
         {
             Node node = model.nodes[i];
             nodes[i] = node.copy();
         }
+
         invalidate();
     }
     private void copyAnimations(){}
@@ -183,7 +179,6 @@ public class Model
     
     private void loadNodes(ModelNode[] modelNodes)
     {
-        writeln("Loading Nodes: ", modelNodes.length);
         nodes.length = modelNodes.length;
         foreach(i, node; modelNodes)
             nodes[i] = loadNode(node);
@@ -249,8 +244,6 @@ public class Model
                 node.children[i] = loadNode(child);
             }
         }
-
-        writeln("Node: ", node.id, " C: ",modelNode.children.length);
 
         return node;
     }
@@ -336,9 +329,6 @@ ModelData loadModelData(string path)
     int lo = cast(int) j["version"].array[0].integer;
     int hi = cast(int) j["version"].array[1].integer;
     string id = ("id" in j) ? j["id"].str : "";
-
-    writeln("Version: ", lo, ":", hi);
-    writeln("ID: ", id);
 
     parseMeshes(model, j);
     parseNodes(model, j);
@@ -480,8 +470,6 @@ private void parseMeshes(ModelData model, JSONValue json)
 
             jsonMesh.id = ("id" in mesh) ? mesh["id"].str:"";
             
-            writeln("Mesh id: ", jsonMesh.id);
-
             JSONValue attributes = mesh["attributes"];
             JSONValue vertices = mesh["vertices"];
             JSONValue parts = mesh["parts"];
@@ -562,8 +550,6 @@ private void parseAttributes(ModelMesh modelMesh, JSONValue attributes)
     foreach (value; attributes.array)
     {
         string attribute = value.str;
-
-        writeln("Attribute: ", attribute, " UNIT: ", unit, " BWC: ", blendWeightCount);
 
         if (attribute.startsWith("TEXCOORD"))
             modelMesh.attributes ~= VertexAttribute.texCoords(unit++);

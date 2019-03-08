@@ -74,9 +74,9 @@ public class MyGame : IApp
 
         _batch.begin(_cam);
 
-        for(int x = -4; x < 8; x++)
+        for(int x = -4; x < 6; x++)
         {
-            for(int y = -4; y < 8; y++)
+            for(int y = -4; y < 6; y++)
             {
                 _modelInstance.transform.set(Vec3(x, 0, y), Quat.fromAxis(0, 1, 0, _a));
                 _batch.render(_modelInstance);
