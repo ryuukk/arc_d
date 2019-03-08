@@ -13,6 +13,8 @@ public class Mesh
 {
     private VertexBuffer _vertices;
     private IndexBuffer _indices;
+    private VertexAttributes _attributes;
+
     private bool autoBind = true;
     private bool _isVertexArray;
 
@@ -22,7 +24,8 @@ public class Mesh
         // this can be problematic since we can have dynamic meshes
         // what if the new update is larger than what was used to create it ?
         // i should define the max then check before uploading data
-        _vertices = new VertexBuffer(isStatic, maxVertices, new VertexAttributes(attributes));
+        _attributes = new VertexAttributes(attributes);
+        _vertices = new VertexBuffer(isStatic, maxVertices, _attributes);
         _indices = new IndexBuffer(isStatic, maxIndices);
         _isVertexArray = false;
     }
@@ -32,6 +35,7 @@ public class Mesh
         // this can be problematic since we can have dynamic meshes
         // what if the new update is larger than what was used to create it ?
         // i should define the max then check before uploading data
+        _attributes = attributes;
         _vertices = new VertexBuffer(isStatic, maxVertices, attributes);
         _indices = new IndexBuffer(isStatic, maxIndices);
         _isVertexArray = false;
@@ -127,6 +131,11 @@ public class Mesh
     {
         return _indices.getNumMaxIndices();
     }
+
+    public VertexAttributes getVertexAttributes()
+    {
+        return _attributes;
+    }
 }
 
 public class MeshPart
@@ -145,4 +154,22 @@ public class MeshPart
     {
         // todo: update bounds
     }
+
+    
+	public MeshPart set (MeshPart other) {
+		this.id = other.id;
+		this.mesh = other.mesh;
+		this.offset = other.offset;
+		this.size = other.size;
+		this.primitiveType = other.primitiveType;
+		this.center = other.center;
+		this.halfExtents = other.halfExtents;
+		this.radius = other.radius;
+		return this;
+	}
+    
+	public void render (ShaderProgram shader, bool autoBind) 
+    {
+		mesh.render(shader, primitiveType, offset, size, autoBind);
+	}
 }

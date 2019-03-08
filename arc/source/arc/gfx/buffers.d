@@ -24,7 +24,7 @@ public class VertexAttributes
 {
     private VertexAttribute[] _attributes;
     public int vertexSize;
-    private long _mask = -1;
+    private ulong _mask = 0;
 
     public this(VertexAttribute[] attr...)
     {
@@ -81,9 +81,9 @@ public class VertexAttributes
         return _attributes[index];
     }
 
-    public long getMask()
+    public ulong getMask()
     {
-        if (_mask == -1)
+        if (_mask == 0)
         {
             long result = 0;
             for (int i = 0; i < _attributes.length; i++)
@@ -135,12 +135,14 @@ public class VertexAttribute
 
     public static VertexAttribute boneWeight(int unit)
     {
-        return new VertexAttribute(Usage.BoneWeight, 2, format("%s%s", ShaderProgram.BONEWEIGHT_ATTRIBUTE, unit), unit);
+        return new VertexAttribute(Usage.BoneWeight, 2, format("%s%s",
+                ShaderProgram.BONEWEIGHT_ATTRIBUTE, unit), unit);
     }
 
     public static VertexAttribute texCoords(int unit)
     {
-        return new VertexAttribute(Usage.TextureCoordinates, 2, format("%s%s", ShaderProgram.TEXCOORD_ATTRIBUTE, unit), unit);
+        return new VertexAttribute(Usage.TextureCoordinates, 2, format("%s%s",
+                ShaderProgram.TEXCOORD_ATTRIBUTE, unit), unit);
     }
 
     public int usage;
@@ -154,8 +156,8 @@ public class VertexAttribute
 
     public this(int usage, int numComponents, string aliass, int unit = 0)
     {
-        this(usage, numComponents, usage == Usage.ColorPacked ? GL_UNSIGNED_BYTE : GL_FLOAT, usage == Usage.ColorPacked, aliass,
-                unit);
+        this(usage, numComponents, usage == Usage.ColorPacked ? GL_UNSIGNED_BYTE
+                : GL_FLOAT, usage == Usage.ColorPacked, aliass, unit);
     }
 
     public this(int usage, int numComponents, int type, bool normalized, string aliass, int unit)
@@ -166,7 +168,23 @@ public class VertexAttribute
         this.normalized = normalized;
         this.aliass = aliass;
         this.unit = unit;
-        //this.usageIndex = Integer.numberOfTrailingZeros(usage);
+        _usageIndex = numberOfTrailingZeros(usage);
+    }
+
+    public static int numberOfTrailingZeros(int i)
+    {
+        return bitCount((i & -i) - 1);
+    }
+
+    public static int bitCount(int i)
+    {
+        // Algo from : http://aggregate.ee.engr.uky.edu/MAGIC/#Population%20Count%20(ones%20Count)   
+        i -= ((i >> 1) & 0x55555555);
+        i = (i & 0x33333333) + ((i >> 2) & 0x33333333);
+        i = (((i >> 4) + i) & 0x0F0F0F0F);
+        i += (i >> 8);
+        i += (i >> 16);
+        return (i & 0x0000003F);
     }
 
     public int getKey()
@@ -276,7 +294,9 @@ public class VertexBuffer
                 {
                     VertexAttribute attribute = _attributes.get(i);
                     int location = shader.getAttributeLocation(attribute.aliass);
+
                     stillValid = location == _cachedLocations[i];
+
                 }
             }
             else
@@ -293,18 +313,19 @@ public class VertexBuffer
         {
             glBindBuffer(GL_ARRAY_BUFFER, _bufferHandle);
             unbindAttributes(shader);
-            _cachedLocations.length = 0;
+            _cachedLocations.length = numAttributes;
 
             for (int i = 0; i < numAttributes; i++)
             {
                 VertexAttribute attribute = _attributes.get(i);
                 if (locations == null)
                 {
-                    _cachedLocations ~= (shader.getAttributeLocation(attribute.aliass));
+                    int l = (shader.getAttributeLocation(attribute.aliass));
+                    _cachedLocations[i] = l;
                 }
                 else
                 {
-                    _cachedLocations ~= (locations[i]);
+                    _cachedLocations[i] = (locations[i]);
                 }
 
                 int location = _cachedLocations[i];
@@ -314,8 +335,8 @@ public class VertexBuffer
                 }
 
                 shader.enableVertexAttribute(location);
-                shader.setVertexAttribute(location, attribute.numComponents, attribute.type, attribute.normalized, _attributes
-                        .vertexSize, attribute.offset);
+                shader.setVertexAttribute(location, attribute.numComponents, attribute.type,
+                        attribute.normalized, _attributes.vertexSize, attribute.offset);
             }
         }
     }
@@ -530,8 +551,8 @@ public class IndexBuffer
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bufferHandle);
         if (_isDirty)
         {
-            writeln(format("IndexBuffer was dirty, update data, l: %s s: %s sizeof: %s", _buffer.length, _buffer.length * 2,
-                    _buffer.sizeof));
+            writeln(format("IndexBuffer was dirty, update data, l: %s s: %s sizeof: %s",
+                    _buffer.length, _buffer.length * 2, _buffer.sizeof));
 
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, _buffer.length * 2, _buffer.ptr, _usage);
             _isDirty = false;

@@ -5,7 +5,7 @@ import arc.gfx.texture;
 public abstract class Attribute
 {
     private static string[] types;
-    
+
     private static ulong getAttributeType(string aliass)
     {
         for (int i = 0; i < types.length; i++)
@@ -129,11 +129,56 @@ public class TextureAttribute : Attribute
     }
 }
 
+public class IntAttribute : Attribute
+{
+    public static immutable string cullFaceAlias = "cullface";
+    public static immutable ulong cullFace;
+
+    static this()
+    {
+        cullFace = register(cullFaceAlias);
+    }
+
+    public static IntAttribute createCullFace(int value)
+    {
+        return new IntAttribute(cullFace, value);
+    }
+
+    public int value;
+
+    public this(ulong type, int value)
+    {
+        super(type);
+        this.value = value;
+    }
+}
+
+public class DepthTestAttribute : Attribute
+{
+    public static immutable string aliass = "depthStencil";
+    public static immutable ulong type;
+
+    static this()
+    {
+        type = register(aliass);
+    }
+
+    public int depthFunc;
+    public float depthRangeNear;
+    public float depthRangeFar;
+    public bool depthMask;
+
+    public this(ulong type)
+    {
+        super(type);
+    }
+}
+
 public class Attributes
 {
     public ulong mask;
     public Attribute[] attributes;
-	public bool sorted = true;
+    public bool sorted = true;
 
     private void enable(ulong mask)
     {
@@ -145,13 +190,15 @@ public class Attributes
         this.mask &= ~mask;
     }
 
-    public void sort () {
-		if (!sorted) {
+    public void sort()
+    {
+        if (!sorted)
+        {
             // todo: figure out sorting
-			//attributes.sort(this);
-			sorted = true;
-		}
-	}
+            //attributes.sort(this);
+            sorted = true;
+        }
+    }
 
     public void set(Attribute attribute)
     {
@@ -164,7 +211,7 @@ public class Attributes
         }
         else
         {
-            attributes[idx] =attribute;
+            attributes[idx] = attribute;
         }
         sort(); //FIXME: See #4186
     }
@@ -182,11 +229,12 @@ public class Attributes
                     return i;
         return -1;
     }
-    
-    public T get(T)(ulong t) 
+
+    public T get(T)(ulong t)
     {
         int index = indexOf(t);
-        if(index == -1) return null;
+        if (index == -1)
+            return null;
 
         return cast(T) attributes[index];
     }
@@ -216,4 +264,5 @@ public class Material : Attributes
 }
 
 public class Environment : Material
-{}
+{
+}

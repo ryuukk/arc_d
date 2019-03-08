@@ -128,10 +128,25 @@ public struct Vec3
 
 public struct Vec4
 {
-    public float x;
-    public float y;
-    public float z;
-    public float w;
+    private float[4] data;
+    public @property float x() {return data[0];}
+    public @property float y() {return data[1];}
+    public @property float z() {return data[2];}
+    public @property float w() {return data[3];}
+    
+    public @property float x(float value) {return data[0] = value;}
+    public @property float y(float value) {return data[1] = value;}
+    public @property float z(float value) {return data[2] = value;}
+    public @property float w(float value) {return data[3] = value;}
+    alias data this;
+
+    public this(float x, float y, float z, float w)
+    {
+        data[0] = x;
+        data[1] = y;
+        data[2] = z;
+        data[3] = w;
+    }
 }
 
 /*
