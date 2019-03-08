@@ -83,7 +83,7 @@ public class MyGame : IApp
         assert(_shader.isCompiled(), _shader.getLog());
 
 
-        auto data = loadModelData("male.g3dj");
+        auto data = loadModelData("data/tree_small_0.g3dj");
         assert(data !is null, "can't parse data");
 
         _model = new Model;

@@ -25,7 +25,7 @@ public class MyGame : IApp
 
     public void create()
     {
-        _tex = Texture2D.fromFile("bg_stars.png");
+        _tex = Texture2D.fromFile("data/bg_stars.png");
 
         _cam = new OrthographicCamera();
         _cam.setToOrtho(Core.graphics.getWidth(), Core.graphics.getHeight());

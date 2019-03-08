@@ -50,7 +50,7 @@ void main() {
 
     public void create()
     {
-        _tex = Texture2D.fromFile("bg_stars.png");
+        _tex = Texture2D.fromFile("data/bg_stars.png");
 
         _mesh = new Mesh(true, 6, 0, 
         new VertexAttribute(Usage.Position, 3, "a_position"), 

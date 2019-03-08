@@ -43,7 +43,7 @@ public class MyGame : IApp
         _cam.lookAt(0, 0, 0);
         _cam.update();
 
-        auto data = loadModelData("male.g3dj");
+        auto data = loadModelData("data/tree_small_0.g3dj");
         assert(data !is null, "can't parse data");
 
         _model = new Model;
@@ -53,7 +53,7 @@ public class MyGame : IApp
 
         _modelInstance = new ModelInstance(_model);
 
-        _batch = new RenderableBatch(new DefaultShaderProvider("default.vert".readText, "default.frag".readText));
+        _batch = new RenderableBatch(new DefaultShaderProvider("data/default.vert".readText, "data/default.frag".readText));
 
         GC.collect();
     }
@@ -74,11 +74,11 @@ public class MyGame : IApp
 
         _batch.begin(_cam);
 
-        for(int x = -4; x < 6; x++)
+        for(int x = -2; x < 3; x++)
         {
-            for(int y = -4; y < 6; y++)
+            for(int y = -2; y < 3; y++)
             {
-                _modelInstance.transform.set(Vec3(x, 0, y), Quat.fromAxis(0, 1, 0, _a));
+                _modelInstance.transform.set(Vec3(x*2, 0, y*2), Quat.fromAxis(0, 1, 0, _a));
                 _batch.render(_modelInstance);
             }
 
