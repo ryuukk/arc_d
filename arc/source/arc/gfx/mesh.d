@@ -15,7 +15,7 @@ public class Mesh
     private IndexBuffer _indices;
     private VertexAttributes _attributes;
 
-    private bool autoBind = true;
+    public bool autoBind = true;
     private bool _isVertexArray;
 
     public this(bool isStatic, int maxVertices, int maxIndices, VertexAttribute[] attributes...)
@@ -150,11 +150,31 @@ public class MeshPart
     public Vec3 halfExtents;
     public float radius = -1;
 
+    public this()
+    {}
+
+    public this(MeshPart other)
+    {
+        set(other);
+    }
+
     public void update()
     {
         // todo: update bounds
     }
-
+    
+	public MeshPart set (string id, Mesh mesh, int offset, int size, int type) 
+    {
+		this.id = id;
+		this.mesh = mesh;
+		this.offset = offset;
+		this.size = size;
+		this.primitiveType = type;
+		this.center = Vec3(0, 0, 0);
+		this.halfExtents = Vec3(0, 0, 0);
+		this.radius = -1f;
+		return this;
+	}
     
 	public MeshPart set (MeshPart other) {
 		this.id = other.id;

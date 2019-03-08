@@ -1,8 +1,15 @@
 module arc.gfx.rendering;
 
+import std.stdio;
+import std.container;
 import bindbc.opengl;
 
+import arc.pool;
+import arc.math;
 import arc.gfx.texture;
+import arc.gfx.renderable;
+import arc.gfx.camera;
+import arc.gfx.shader;
 
 public class RenderContext
 {
@@ -76,7 +83,8 @@ public class RenderContext
         {
             if (!wasEnabled || depthFunc != depthFunction)
                 glDepthFunc(depthFunc = depthFunction);
-            if (!wasEnabled || this.depthRangeNear != depthRangeNear || this.depthRangeFar != depthRangeFar)
+            if (!wasEnabled || this.depthRangeNear != depthRangeNear
+                    || this.depthRangeFar != depthRangeFar)
             {
                 this.depthRangeNear = depthRangeNear;
                 this.depthRangeFar = depthRangeFar;
@@ -115,6 +123,107 @@ public class RenderContext
             }
             else
                 glDisable(GL_CULL_FACE);
+        }
+    }
+}
+
+public class RenderableBatch
+{
+    public class RenderablePool : Pool!Renderable
+    {
+        public override Renderable newObject()
+        {
+            return new Renderable;
+        }
+
+        public override Renderable obtain()
+        {
+            Renderable renderable = super.obtain();
+            renderable.environment = null;
+            renderable.material = null;
+            renderable.meshPart.set("", null, 0, 0, 0);
+            renderable.shader = null;
+            renderable.worldTransform = Mat4.identity;
+            return renderable;
+        }
+    }
+
+    public Camera camera;
+    public Array!Renderable renderables;
+    public RenderContext context;
+    public bool ownContext;
+    public IShaderProvider shaderProvider;
+    public RenderablePool renderablesPool;
+
+    public this(IShaderProvider shaderProvider)
+    {
+        renderablesPool = new RenderablePool;
+        ownContext = true;
+        context = new RenderContext(new TextureBinder);
+        this.shaderProvider = shaderProvider;
+    }
+
+    public void begin(Camera camera)
+    {
+        this.camera = camera;
+        if (ownContext)
+            context.begin();
+    }
+
+    public void end()
+    {
+        flush();
+        if (ownContext)
+            context.end();
+        camera = null;
+    }
+
+    public void flush()
+    {
+        //writeln(renderables.length);
+        // sort
+        IShader currentShader = null;
+        for (int i = 0; i < renderables.length; i++)
+        {
+            Renderable renderable = renderables[i];
+            
+            if (currentShader !is renderable.shader)
+            {
+                if (currentShader !is null)
+                    currentShader.end();
+
+                currentShader = renderable.shader;
+                currentShader.begin(camera, context);
+            }
+            currentShader.render(renderable);
+        }
+        if (currentShader !is null)
+            currentShader.end();
+
+        for (int i = 0; i < renderables.length; i++)
+        {
+            Renderable renderable = renderables[i];
+            renderablesPool.free(renderable);
+        }
+        renderables.clear();
+    }
+
+    public void render(Renderable renderable)
+    {
+        renderable.shader = shaderProvider.getShader(renderable);
+        renderable.meshPart.mesh.autoBind = false;
+        renderables.insert(renderable);
+    }
+
+    public void render(IRenderableProvider renderableProvider)
+    {
+        int offset = cast(int) renderables.length;
+        //writeln("Render: ",  offset);
+        renderableProvider.getRenderables(renderables, renderablesPool);
+        for (int i = offset; i < renderables.length; i++)
+        {
+            Renderable renderable = renderables[i];
+            renderable.shader = shaderProvider.getShader(renderable);
         }
     }
 }

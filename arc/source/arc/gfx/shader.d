@@ -12,6 +12,7 @@ import arc.gfx.rendering;
 import arc.gfx.material;
 import arc.gfx.mesh;
 import arc.gfx.buffers;
+import arc.gfx.renderable;
 import arc.math;
 
 public interface IShader
@@ -345,26 +346,6 @@ public class ShaderProgram
     }
 }
 
-public class Renderable
-{
-    public Mat4 worldTransform;
-    public MeshPart meshPart = new MeshPart;
-    public Material material;
-    public Environment environment;
-    public Mat4[] bones;
-    public IShader shader;
-
-    public Renderable set(Renderable renderable)
-    {
-        worldTransform = renderable.worldTransform;
-        material = renderable.material;
-        meshPart.set(renderable.meshPart);
-        bones = renderable.bones;
-        environment = renderable.environment;
-        shader = renderable.shader;
-        return this;
-    }
-}
 
 public interface IValidator
 {
@@ -594,7 +575,7 @@ public interface IShaderProvider
     IShader getShader(Renderable renderable);
 }
 
-public abstract class BaseShaderProvider
+public abstract class BaseShaderProvider : IShaderProvider
 {
     private IShader[] shaders;
 
@@ -793,7 +774,7 @@ public class DefaultShader : BaseShader
 
     public override void render(Renderable renderable, Attributes attributes)
     {
-        program.setUniformMat4("u_worldTrans", Mat4.identity);
+        program.setUniformMat4("u_worldTrans", renderable.worldTransform);
         bindMaterial(attributes);
 
         super.render(renderable, attributes);
@@ -809,17 +790,17 @@ public class DefaultShader : BaseShader
 
         if (attributes.has(TextureAttribute.diffuse))
         {
+            // todo: use binder from context
             TextureAttribute ta = attributes.get!TextureAttribute(TextureAttribute.diffuse);
             ta.textureDescriptor.texture.bind();
             //context.textureBinder.bind(ta.textureDescriptor);
             program.setUniformi("u_diffuseTexture", 0);
-            //program.setUniformVec4("u_diffuseUVTransform", Vec4(0,0,1,1));
             program.setUniform4f("u_diffuseUVTransform", 0, 0, 1, 1);
         }
 
-        //context.setCullFace(cullFace);
-        //context.setDepthTest(depthFunc, depthRangeNear, depthRangeFar);
-        //context.setDepthMask(depthMask);
+        context.setCullFace(cullFace);
+        context.setDepthTest(depthFunc, depthRangeNear, depthRangeFar);
+        context.setDepthMask(depthMask);
     }
 
     public int compareTo(IShader other)

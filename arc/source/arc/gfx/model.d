@@ -1,5 +1,8 @@
 module arc.gfx.model;
 
+import std.container;
+
+import arc.pool;
 import arc.math;
 import arc.color;
 import arc.gfx.node;
@@ -8,6 +11,91 @@ import arc.gfx.animation;
 import arc.gfx.mesh;
 import arc.gfx.buffers;
 import arc.gfx.node;
+import arc.gfx.renderable;
+
+public class ModelInstance : IRenderableProvider
+{
+	public static bool defaultShareKeyframes = true;
+
+    public Material[] materials;
+    public Node[] nodes;
+    public Animation[] animations;
+    public Model model;
+
+    public Mat4 transform = Mat4.identity;
+
+    public this(Model model)
+    {
+        this.model = model;
+        copyNodes(this.model);
+        copyAnimations();
+        calculateTransforms();
+    }
+
+    private void copyNodes(Model model)
+    {
+        nodes.length = model.nodes.length;
+
+        if(model.nodes.length == 0)
+        {
+            writeln("INFO: 0 nodes to copy");
+        }
+
+        for (int i = 0; i < model.nodes.length; i++)
+        {
+            Node node = model.nodes[i];
+            nodes[i] = node.copy();
+        }
+        invalidate();
+    }
+    private void copyAnimations(){}
+    private void calculateTransforms(){}
+
+    public void invalidate(){}
+
+    public void getRenderables(ref Array!Renderable renderables, Pool!Renderable pool)
+    {
+        for(int i = 0; i < nodes.length; i++)
+        {
+            Node node = nodes[i];
+            getRenderables(node, renderables, pool);
+        }
+    }
+
+    private void getRenderables(Node node, ref Array!Renderable renderables, Pool!Renderable pool)
+    {
+        if (node.parts.length > 0)
+        {
+            for (int i = 0; i < node.parts.length; i++)
+            {
+                NodePart nodePart = node.parts[i];
+
+
+                if (nodePart.enabled)
+                    renderables.insert(getRenderable(pool.obtain(), node, nodePart));
+
+                    
+            }
+        }
+
+        for (int i = 0; i < node.children.length; i++)
+        {
+            Node child = node.children[i];
+            getRenderables(child, renderables, pool);
+        }
+    }
+
+    private Renderable getRenderable(Renderable renderable, Node node, NodePart nodePart)
+    {
+        nodePart.setRenderable(renderable);
+
+        if (nodePart.bones.length == 0)
+            renderable.worldTransform = transform * node.globalTransform;
+        else
+            renderable.worldTransform = transform;
+        return renderable;
+    }
+}
 
 public class Model
 {
@@ -92,12 +180,20 @@ public class Model
         materials ~= result;
     }
 
+    
     private void loadNodes(ModelNode[] modelNodes)
     {
+        writeln("Loading Nodes: ", modelNodes.length);
+        nodes.length = modelNodes.length;
+        foreach(i, node; modelNodes)
+            nodes[i] = loadNode(node);
+            
     }
 
     private Node loadNode(ModelNode modelNode)
     {
+        // todo: finish
+
         Node node = new Node;
         node.id = modelNode.id;
         
@@ -107,13 +203,56 @@ public class Model
 
         if(modelNode.parts.length > 0)
         {
-            foreach(modelNodePart; modelNode.parts)
+            node.parts.length = modelNode.parts.length;
+            
+            foreach(i, modelNodePart; modelNode.parts)
             {
+                MeshPart meshPart = null;
+                Material meshMaterial = null;
 
+                if(modelNodePart.meshPartId.length > 0)
+                {
+                    foreach(part; meshParts)
+                    {
+                        meshPart = part;
+                        break;
+                    }
+                }
+
+                if(modelNodePart.materialId.length > 0)
+                {
+                    foreach(material; materials)
+                    {
+                        meshMaterial = material;
+                        break;
+                    }
+                }
+                
+                if(meshPart is null || meshMaterial is null) throw new Exception("invalid node");
+
+                if(meshPart !is null && meshMaterial !is null)
+                {
+                    NodePart nodePart = new NodePart();
+                    nodePart.meshPart = meshPart;
+                    nodePart.material = meshMaterial;
+                    node.parts[i] = nodePart;
+                    // todo: add bones
+                }
             }
         }
-        // todo: finish
-        return null;
+
+        if(modelNode.children.length > 0)
+        {
+            node.children.length = modelNode.children.length;
+            foreach(i,ModelNode child; modelNode.children)
+            {
+                node.children[i] = loadNode(child);
+            }
+        }
+
+        writeln("Node: ", node.id, " C: ",modelNode.children.length);
+
+        return node;
     }
 
     private void loadAnimations(ModelAnimation[] modelAnimations)
@@ -264,7 +403,16 @@ private int parseTextureUsage(string type)
 
 private void parseNodes(ModelData model, JSONValue json)
 {
-
+    if( "nodes" in json)
+    {
+        JSONValue[] nodes = json["nodes"].array;
+        
+        model.nodes.length = nodes.length;
+        foreach(i, JSONValue node; nodes)
+        {
+            model.nodes[i] = parseNodesRecursively(node);
+        }
+    }
 }
 
 private ModelNode parseNodesRecursively(JSONValue json)
@@ -272,7 +420,52 @@ private ModelNode parseNodesRecursively(JSONValue json)
     ModelNode jsonNode = new ModelNode;
     jsonNode.id = json["id"].str;
 
+
+    if( "translation" in json ) jsonNode.translation = readVec3(json["translation"]);
+    else jsonNode.translation = Vec3();
+
+    if( "scale" in json ) jsonNode.scale = readVec3(json["scale"]);
+    else jsonNode.scale = Vec3(1, 1, 1);
+
+    if( "rotation" in json ) jsonNode.rotation = readQuat(json["rotation"]);
+    else jsonNode.rotation = Quat.identity;
+
+    jsonNode.meshId = ( "mesh" in json ) ? json["mesh"].str : "";
+
+
+    if( "parts" in json )
+    {
+        JSONValue[] materials = json["parts"].array;
+        jsonNode.parts.length = materials.length;
+
+        foreach(i, material; materials)
+        {
+            ModelNodePart nodePart = new ModelNodePart();
+
+            nodePart.meshPartId = material["meshpartid"].str;
+            nodePart.materialId = material["materialid"].str;
+
+            jsonNode.parts[i] = nodePart;
+        }
+    }
+
+
     return jsonNode;
+}
+
+private Vec3 readVec3(JSONValue value)
+{
+    return Vec3(value.array[0].floating, value.array[1].floating, value.array[2].floating);
+}
+
+private Vec2 readVec2(JSONValue value)
+{
+    return Vec2(value.array[0].floating, value.array[1].floating);
+}
+
+private Quat readQuat(JSONValue value)
+{
+    return Quat(value.array[0].floating, value.array[1].floating, value.array[2].floating, value.array[3].floating);
 }
 
 private void parseMeshes(ModelData model, JSONValue json)

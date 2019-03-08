@@ -22,6 +22,7 @@
 		"samples/04_textured_quad",
 		"samples/05_spritebatch",
 		"samples/06_cube",
-		"samples/07_model"
+		"samples/07_model",
+		"samples/08_renderbatch"
 	]
 }

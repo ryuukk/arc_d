@@ -4,6 +4,7 @@ import arc.math;
 import arc.gfx.node;
 import arc.gfx.mesh;
 import arc.gfx.material;
+import arc.gfx.renderable;
 
 public class Node
 {
@@ -22,6 +23,42 @@ public class Node
 
     public Node parent;
     public Node[] children;
+
+    public this()
+    {}
+
+    public void detach()
+    {}
+
+    public Node copy()
+    {
+        return new Node().set(this);
+    }
+
+    public Node set(Node other)
+    {
+        detach();
+        
+		id = other.id;
+		isAnimated = other.isAnimated;
+		inheritTransform = other.inheritTransform;
+		translation = other.translation;
+		rotation = other.rotation;
+		scale = other.scale;
+		localTransform = other.localTransform;
+		globalTransform = other.globalTransform;
+
+		parts.length = other.parts.length;
+        children.length = other.children.length;
+		
+        foreach (i, NodePart nodePart; other.parts) {
+			parts[i] = nodePart.copy();
+		}
+		foreach (i, Node child; other.children) {
+			children[i] = child.copy();
+		}
+		return this;
+    }
 }
 
 Node getNode(ref Node[] nodes, string id, bool recursive = true, bool ignoreCase = false)
@@ -60,4 +97,44 @@ public class NodePart
     public Node[Mat4] invBoneBindTransforms;
     public Mat4[] bones;
     public bool enabled = true;
+
+    public this()
+    {}
+
+    public Renderable setRenderable(Renderable renderable)
+    {
+        renderable.material = material;
+        renderable.meshPart.set(meshPart);
+        renderable.bones = bones;
+        return renderable;
+    }
+
+    public NodePart copy()
+    {
+        return new NodePart().set(this);
+    }
+
+    public NodePart set(NodePart other)
+    {
+        meshPart = new MeshPart(other.meshPart);
+		material = other.material;
+		enabled = other.enabled;
+        
+        // todo: finish
+
+		//if (other.invBoneBindTransforms.length == 0) {
+		//	invBoneBindTransforms.length = 0;
+		//	bones.length = 0;
+		//} else {
+           //invBoneBindTransforms.length = other.invBoneBindTransforms.length;
+			//invBoneBindTransforms.putAll(other.invBoneBindTransforms);
+			//if (bones == null || bones.length != invBoneBindTransforms.size)
+			//	bones = new Matrix4[invBoneBindTransforms.size];
+			//for (int i = 0; i < bones.length; i++) {
+			//	if (bones[i] == null)
+			//		bones[i] = new Matrix4();
+			//}
+		//}
+		return this;
+    }
 }
