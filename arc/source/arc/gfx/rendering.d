@@ -180,7 +180,6 @@ public class RenderableBatch
 
     public void flush()
     {
-        //writeln(renderables.length);
         // sort
         IShader currentShader = null;
         for (int i = 0; i < renderables.length; i++)
@@ -218,7 +217,6 @@ public class RenderableBatch
     public void render(IRenderableProvider renderableProvider)
     {
         int offset = cast(int) renderables.length;
-        //writeln("Render: ",  offset);
         renderableProvider.getRenderables(renderables, renderablesPool);
         for (int i = offset; i < renderables.length; i++)
         {

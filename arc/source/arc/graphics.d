@@ -173,15 +173,14 @@ public class Graphics
 
 			if (ret == GLFWSupport.noLibrary)
 			{
-
-				writeln("ERROR: unable to find glfw3 library");
+				Core.logger.errorf("Unable to find glfw3 library, %s", ret);
 			}
 			else if (GLFWSupport.badLibrary)
 			{
 				// One or more symbols failed to load. The likely cause is that the
 				// shared library is for a lower version than bindbc-glfw was configured
 				// to load (via GLFW_31, GLFW_32 etc.)
-				writeln("ERROR: wrong library shit");
+				Core.logger.errorf("Wrong library, %s", ret);
 			}
 		}
 
@@ -202,6 +201,7 @@ public class Graphics
 			glfwTerminate();
 			return false;
 		}
+		Core.logger.infof("Created window with size: %s:%s", _config.windowWidth, _config.windowHeight);
 
 		if (_config.windowX == -1 && _config.windowY == -1)
 		{
@@ -215,7 +215,6 @@ public class Graphics
 			int windowX = vidMode.width / 2 - windowWidth / 2;
 			int windowY = vidMode.height / 2 - windowHeight / 2;
 			glfwSetWindowPos(_window, windowX, windowY);
-			writeln(format("Centering window => Monitor: %s:%s Window: %s:%s -> %s:%s", vidMode.width, vidMode.height, windowWidth, windowHeight, windowX, windowY));
 		}
 
 
@@ -232,12 +231,11 @@ public class Graphics
 		glfwSwapBuffers(_window);
 		glfwShowWindow(_window);
 
-
-		writefln("Vendor:    %s", to!string(glGetString(GL_VENDOR)));
-		writefln("Renderer:  %s", to!string(glGetString(GL_RENDERER)));
-		writefln("Version:   %s", to!string(glGetString(GL_VERSION)));
-		writefln("GLSL:      %s", to!string(glGetString(GL_SHADING_LANGUAGE_VERSION)));
-		writefln("Loaded GL: %s", to!string(retVal));
+		Core.logger.infof("Vendor:    %s", to!string(glGetString(GL_VENDOR)));
+		Core.logger.infof("Renderer:  %s", to!string(glGetString(GL_RENDERER)));
+		Core.logger.infof("Version:   %s", to!string(glGetString(GL_VERSION)));
+		Core.logger.infof("GLSL:      %s", to!string(glGetString(GL_SHADING_LANGUAGE_VERSION)));
+		Core.logger.infof("Loaded GL: %s", to!string(retVal));
 
 		glViewport(0, 0, _width, _height);
 

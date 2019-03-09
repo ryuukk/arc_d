@@ -363,7 +363,6 @@ public class VertexBuffer
     {
         if (_isDirty)
         {
-            //writeln(format("VertexBuffer was dirty, update data, l: %s s: %s sizeof: %s", _vertices.length, (_vertices.length * float.sizeof), _vertices.sizeof));
             glBindBuffer(GL_ARRAY_BUFFER, _bufferHandle);
             glBufferData(GL_ARRAY_BUFFER, (_vertices.length * float.sizeof), _vertices.ptr, _usage);
             _isDirty = false;
@@ -383,132 +382,6 @@ public class VertexBuffer
     }
 
 }
-
-/*
-public class VertexBuffer
-{
-    private VertexAttributes attributes;
-    private float[] buffer;
-    private bool ownsBuffer;
-    private GLuint bufferHandle;
-    private int usage;
-    bool isDirty = false;
-    bool isBound = false;
-
-    public this(bool isStatic, int numVertices, VertexAttributes attributes)
-    {
-        this.attributes = attributes;
-        buffer.length = numVertices * attributes.calculateOffsets() / 4;
-        glGenBuffers(1, &bufferHandle);
-        usage = isStatic ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW;
-
-        writeln(format("VertexBuffer: max: %s l: %s", numVertices, buffer.length));
-    }
-
-    private void bufferChanged()
-    {
-        if (isBound)
-        {
-            writeln("BUFFER CHANGED");
-            glBufferData(GL_ARRAY_BUFFER, buffer.sizeof, buffer.ptr, usage);
-            isDirty = false;
-        }
-    }
-
-    public void setVertices(float[] vertices, int offset, int count)
-    {
-        isDirty = true;
-        buffer.length = count;
-        buffer = vertices.dup;
-        bufferChanged();
-    }
-
-    public void bind(ShaderProgram shader, int[] locations)
-    {
-        glBindBuffer(GL_ARRAY_BUFFER, bufferHandle);
-        if (isDirty)
-        {
-            writeln(format("VertexBuffer was dirty, update data, l: %s s:%s sizeof:%s", buffer.length, buffer.length * 4, buffer.sizeof));
-
-            glBufferData(GL_ARRAY_BUFFER, buffer.length * 4, buffer.ptr, usage);
-            isDirty = false;
-        }
-
-        int numAttributes = attributes.size();
-        if (locations is null)
-        {
-            for (int i = 0; i < numAttributes; i++)
-            {
-                VertexAttribute attribute = attributes.get(i);
-
-                int location = shader.getAttributeLocation(attribute.aliass);
-                if (location < 0)
-                {
-                    writeln("wuutt");
-                    continue;
-                }
-                shader.enableVertexAttribute(location);
-                shader.setVertexAttribute(location, attribute.numComponents, attribute.type, attribute.normalized, attributes.vertexSize, attribute.offset);
-            }
-        }
-        else
-        {
-            writeln("yo");
-            for (int i = 0; i < numAttributes; i++)
-            {
-                VertexAttribute attribute = attributes.get(i);
-                int location = locations[i];
-                if (location < 0)
-                    continue;
-                shader.enableVertexAttribute(location);
-
-                shader.setVertexAttribute(location, attribute.numComponents, attribute.type, attribute.normalized, attributes.vertexSize, attribute.offset);
-            }
-        }
-        isBound = true;
-    }
-
-    public void unbind(ShaderProgram shader, int[] locations)
-    {
-        int numAttributes = attributes.size();
-        if (locations == null)
-        {
-            for (int i = 0; i < numAttributes; i++)
-            {
-                shader.disableVertexAttribute(attributes.get(i).aliass);
-            }
-        }
-        else
-        {
-            for (int i = 0; i < numAttributes; i++)
-            {
-                int location = locations[i];
-                if (location >= 0)
-                    shader.disableVertexAttribute(location);
-            }
-        }
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        isBound = false;
-    }
-
-    public int getNumVertices()
-    {
-        return cast(int) buffer.length / (attributes.vertexSize / 4);
-    }
-
-    public int getNumMaxVertices()
-    {
-        return cast(int) buffer.length / (attributes.vertexSize / 4);
-    }
-
-    public void dispose()
-    {
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glDeleteBuffers(1, &bufferHandle);
-        bufferHandle = 0;
-    }
-}
-*/
 
 public class IndexBuffer
 {
@@ -551,9 +424,6 @@ public class IndexBuffer
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, _bufferHandle);
         if (_isDirty)
         {
-            writeln(format("IndexBuffer was dirty, update data, l: %s s: %s sizeof: %s",
-                    _buffer.length, _buffer.length * 2, _buffer.sizeof));
-
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, _buffer.length * 2, _buffer.ptr, _usage);
             _isDirty = false;
         }

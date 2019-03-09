@@ -247,13 +247,9 @@ public class Texture2D : GLTexture
 
     public static Texture2D fromFile(string path)
     {
-
         auto image = new Image(path);
         auto tex = new Texture2D(GL_TEXTURE_2D);
         tex.setData(image, image.w(), image.h());
-
-        writeln(format("Loaded Image: %s, Size: %s:%s", path, image.w(), image.h()));
-
         return tex;
     }
 

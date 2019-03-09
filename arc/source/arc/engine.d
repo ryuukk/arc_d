@@ -1,5 +1,7 @@
 module arc.engine;
 
+import std.experimental.logger;
+
 import bindbc.opengl;
 import bindbc.glfw;
 
@@ -30,6 +32,7 @@ public class Engine
 	private Audio _audio;
 	private Input _input;
 	private IApp _app;
+	private Logger _logger;
 	private Configuration _config;
 	private bool _running = true;
 	
@@ -44,10 +47,12 @@ public class Engine
 		_graphics = new Graphics(_app, _config);
 		_audio = new Audio;
 		_input = new Input;
+		_logger = new FileLogger("log.txt");
         
 		Core.graphics = _graphics;
 		Core.audio = _audio;
 		Core.input = _input;
+		Core.logger = _logger;
 
 
 		_graphics.createContext();

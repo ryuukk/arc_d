@@ -76,7 +76,6 @@ public class Mesh
 
     public void render(ShaderProgram shader, int primitiveType, int offset, int count, bool autoBind)
     {
-        //writeln(format("Render: %s %s %s %s", primitiveType, offset, count, autoBind));
         if (count == 0)
             return;
 
