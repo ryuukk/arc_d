@@ -6,6 +6,7 @@ import std.experimental.logger;
 import arc.pool;
 import arc.math;
 import arc.color;
+import arc.core;
 import arc.gfx.node;
 import arc.gfx.material;
 import arc.gfx.animation;
