@@ -1,5 +1,6 @@
 module arc.gfx.material;
 
+import arc.color;
 import arc.gfx.texture;
 
 public abstract class Attribute
@@ -171,6 +172,63 @@ public class DepthTestAttribute : Attribute
     public this(ulong type)
     {
         super(type);
+    }
+}
+
+public class ColorAttribute : Attribute
+{
+	public immutable static string diffuseAlias = "diffuseColor";
+	public immutable static string specularAlias = "specularColor";
+	public immutable static string ambientAlias = "ambientColor";
+	public immutable static string emissiveAlias = "emissiveColor";
+	public immutable static string reflectionAlias = "reflectionColor";
+	public immutable static string ambientLightAlias = "ambientLightColor";
+	public immutable static string fogAlias = "fogColor";
+    
+	public immutable static ulong diffuse;
+	public immutable static ulong specular;
+	public immutable static ulong ambient;
+	public immutable static ulong emissive;
+	public immutable static ulong reflection;
+	public immutable static ulong ambientLight;
+	public immutable static ulong fog;
+
+	protected static ulong mask;
+
+	public static ColorAttribute createAmbient (Color color) {
+		return new ColorAttribute(ambient, color);
+	}
+
+	public static ColorAttribute createDiffuse (Color color) {
+		return new ColorAttribute(diffuse, color);
+	}
+
+	public static ColorAttribute createSpecular (Color color) {
+		return new ColorAttribute(specular, color);
+	}
+
+	public static ColorAttribute createReflection (Color color) {
+		return new ColorAttribute(reflection, color);
+	}
+
+    static this()
+    {
+        diffuse = register(diffuseAlias);
+        specular = register(specularAlias);
+        ambient = register(ambientAlias);
+        emissive = register(emissiveAlias);
+        reflection = register(reflectionAlias);
+        ambientLight = register(ambientLightAlias);
+        fog = register(fogAlias);
+        mask = ambient | diffuse | specular | emissive | reflection | ambientLight | fog;
+    }
+
+    public Color color;
+
+    public this(ulong type, Color color)
+    {
+        super(type);
+        this.color = color;
     }
 }
 
