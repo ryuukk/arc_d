@@ -1,6 +1,7 @@
 module arc.gfx.model;
 
 import std.container;
+import std.experimental.logger;
 
 import arc.pool;
 import arc.math;
@@ -177,8 +178,10 @@ public class Model
     }
 
     
+    Mat4[string][NodePart] nodePartBones;
     private void loadNodes(ModelNode[] modelNodes)
     {
+        nodePartBones.clear();
         nodes.length = modelNodes.length;
         foreach(i, node; modelNodes)
             nodes[i] = loadNode(node);
@@ -187,8 +190,6 @@ public class Model
 
     private Node loadNode(ModelNode modelNode)
     {
-        // todo: finish
-
         Node node = new Node;
         node.id = modelNode.id;
         
@@ -200,7 +201,7 @@ public class Model
         {
             node.parts.length = modelNode.parts.length;
             
-            foreach(i, modelNodePart; modelNode.parts)
+            foreach(i,ModelNodePart modelNodePart; modelNode.parts)
             {
                 MeshPart meshPart = null;
                 Material meshMaterial = null;
@@ -231,7 +232,10 @@ public class Model
                     nodePart.meshPart = meshPart;
                     nodePart.material = meshMaterial;
                     node.parts[i] = nodePart;
-                    // todo: add bones
+                    if(modelNodePart.bones.length > 0)
+                    {
+                        nodePartBones[nodePart] = modelNodePart.bones;
+                    }
                 }
             }
         }
@@ -328,7 +332,7 @@ ModelData loadModelData(string path)
 
     int lo = cast(int) j["version"].array[0].integer;
     int hi = cast(int) j["version"].array[1].integer;
-    string id = ("id" in j) ? j["id"].str : "";
+    model.id = ("id" in j) ? j["id"].str : path;
 
     parseMeshes(model, j);
     parseNodes(model, j);
@@ -339,10 +343,11 @@ ModelData loadModelData(string path)
 
 private void parseMaterials(ModelData model, JSONValue json, string materialDir)
 {
-    JSONValue materials = json["materials"];
 
+    JSONValue materials = json["materials"];
     model.materials.length = materials.array.length;
 
+    infof("Model %s has %s materials !!", model.id, model.materials.length);
     foreach(i, material; materials.array)
     {
         ModelMaterial jsonMaterial = new ModelMaterial;
@@ -367,6 +372,10 @@ private void parseMaterials(ModelData model, JSONValue json, string materialDir)
 
                 jsonMaterial.textures[j] = jsonTexture;
             }
+        }
+        else
+        {
+            error("Model %s has no material !!", model.id);
         }
         model.materials[i] = jsonMaterial;
     }
@@ -568,7 +577,7 @@ private void parseAttributes(ModelMesh modelMesh, JSONValue attributes)
         else if (attribute == "BINORMAL")
             modelMesh.attributes ~= VertexAttribute.binormal();
         else
-            writeln("ERROR: Unsupported attribute: ", attribute);
+            Core.logger.errorf("Unsupported attribute: %s", attribute);
     }
 }
 
@@ -656,7 +665,7 @@ public class ModelNodePart
 {
     public string materialId;
     public string meshPartId;
-    public string[Mat4] bones;
+    public Mat4[string] bones;
     public int[][] uvMapping;
 }
 
