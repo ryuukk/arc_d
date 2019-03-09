@@ -177,39 +177,23 @@ public class DepthTestAttribute : Attribute
 
 public class ColorAttribute : Attribute
 {
-	public immutable static string diffuseAlias = "diffuseColor";
-	public immutable static string specularAlias = "specularColor";
-	public immutable static string ambientAlias = "ambientColor";
-	public immutable static string emissiveAlias = "emissiveColor";
-	public immutable static string reflectionAlias = "reflectionColor";
-	public immutable static string ambientLightAlias = "ambientLightColor";
-	public immutable static string fogAlias = "fogColor";
-    
-	public immutable static ulong diffuse;
-	public immutable static ulong specular;
-	public immutable static ulong ambient;
-	public immutable static ulong emissive;
-	public immutable static ulong reflection;
-	public immutable static ulong ambientLight;
-	public immutable static ulong fog;
+    public immutable static string diffuseAlias = "diffuseColor";
+    public immutable static string specularAlias = "specularColor";
+    public immutable static string ambientAlias = "ambientColor";
+    public immutable static string emissiveAlias = "emissiveColor";
+    public immutable static string reflectionAlias = "reflectionColor";
+    public immutable static string ambientLightAlias = "ambientLightColor";
+    public immutable static string fogAlias = "fogColor";
 
-	protected static ulong mask;
+    public immutable static ulong diffuse;
+    public immutable static ulong specular;
+    public immutable static ulong ambient;
+    public immutable static ulong emissive;
+    public immutable static ulong reflection;
+    public immutable static ulong ambientLight;
+    public immutable static ulong fog;
 
-	public static ColorAttribute createAmbient (Color color) {
-		return new ColorAttribute(ambient, color);
-	}
-
-	public static ColorAttribute createDiffuse (Color color) {
-		return new ColorAttribute(diffuse, color);
-	}
-
-	public static ColorAttribute createSpecular (Color color) {
-		return new ColorAttribute(specular, color);
-	}
-
-	public static ColorAttribute createReflection (Color color) {
-		return new ColorAttribute(reflection, color);
-	}
+    protected static ulong mask;
 
     static this()
     {
@@ -221,6 +205,26 @@ public class ColorAttribute : Attribute
         ambientLight = register(ambientLightAlias);
         fog = register(fogAlias);
         mask = ambient | diffuse | specular | emissive | reflection | ambientLight | fog;
+    }
+
+    public static ColorAttribute createAmbient(Color color)
+    {
+        return new ColorAttribute(ambient, color);
+    }
+
+    public static ColorAttribute createDiffuse(Color color)
+    {
+        return new ColorAttribute(diffuse, color);
+    }
+
+    public static ColorAttribute createSpecular(Color color)
+    {
+        return new ColorAttribute(specular, color);
+    }
+
+    public static ColorAttribute createReflection(Color color)
+    {
+        return new ColorAttribute(reflection, color);
     }
 
     public Color color;
