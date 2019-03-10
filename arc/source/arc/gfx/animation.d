@@ -229,6 +229,7 @@ public class BaseAnimationController
 
     private static Transform getNodeAnimationTransform(NodeAnimation nodeAnim, float time)
     {
+        // todo: finish implement interpolation
         Transform transform = Transform().idt();
         transform.translation = getTranslationAtTime(nodeAnim, time);
         transform.rotation = getRotationAtTime(nodeAnim, time);

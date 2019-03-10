@@ -1,29 +1,17 @@
 import std.stdio;
-import std.conv;
-import std.string;
-import std.random;
 import core.memory;
-import std.path;
 import std.file : readText;
-import core.thread;
 
 import bindbc.opengl;
 import bindbc.glfw;
 
 import arc.core;
 import arc.engine;
-import arc.input;
 import arc.math;
 import arc.gfx.shader;
-import arc.gfx.buffers;
-import arc.gfx.mesh;
-import arc.gfx.texture;
-import arc.gfx.batch;
 import arc.gfx.camera;
 import arc.gfx.model;
 import arc.gfx.modelloader;
-import arc.gfx.material;
-import arc.gfx.renderable;
 import arc.gfx.rendering;
 import arc.gfx.animation;
 
@@ -58,7 +46,7 @@ public class MyGame : IApp
         _modelInstance = new ModelInstance(_model);
 
         _animController = new AnimationController(_modelInstance);
-        auto desc = _animController.setAnimation("run_1h");
+        auto desc = _animController.animate("run_1h");
 
         _batch = new RenderableBatch(new DefaultShaderProvider("data/default.vert".readText,
                 "data/default.frag".readText));
@@ -70,7 +58,6 @@ public class MyGame : IApp
     {
         _a += dt * 2;
         _animController.update(dt);
-        _modelInstance.calculateTransforms();
     }
 
     public void render(float dt)
