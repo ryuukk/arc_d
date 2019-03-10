@@ -1,12 +1,13 @@
 module arc.gfx.animation;
 
+import std.math;
 import arc.math;
 import arc.gfx.node;
 
 public class Animation
 {
     public string id;
-    public float duration;
+    public float duration = 0f;
     public NodeAnimation[] nodeAnimations;
 }
 
@@ -21,29 +22,24 @@ public class NodeAnimation
 
 public class NodeKeyframe(T)
 {
-    public float keytime;
+    public float keytime = 0f;
     public T value;
-
-    public this(float keytime, T value)
-    {
-        this.keytime = keytime;
-        this.value = value;
-    }
 }
 
 import arc.math;
 
 public struct Transform
 {
-    public Vec3 translation;
-    public Quat rotation;
-    public Vec3 scale;
+    public Vec3 translation = Vec3(0,0,0);
+    public Quat rotation = Quat.identity;
+    public Vec3 scale = Vec3(1,1,1);
 
     public Mat4 toMat4()
     {
         Mat4 ret = Mat4.identity;
-        ret.set(translation.x, translation.y, translation.z, rotation.x,
-                rotation.y, rotation.z, rotation.w, scale.x, scale.y, scale.z);
+        ret.set(translation.x, translation.y, translation.z,
+                rotation.x, rotation.y, rotation.z, rotation.w,
+                scale.x, scale.y, scale.z);
         return ret;
     }
 
@@ -55,18 +51,22 @@ public struct Transform
         return this;
     }
 
-    public ref Transform lerp(ref Vec3 targetT, ref Quat targetR,
-            ref Vec3 targetS, float alpha)
+    public ref Transform lerp(ref Vec3 targetT, ref Quat targetR, ref Vec3 targetS, float alpha)
     {
         //Vec3.lerp(ref translation, ref targetT, alpha, out translation);
-        translation = Vec3.lerp(translation, targetT, alpha);
+        //translation = Vec3.lerp(translation, targetT, alpha);
 
         //Quat.slerp(ref rotation, ref targetR, alpha, out rotation);
-        rotation = Quat.slerp(rotation, targetR, alpha);
+        //rotation = Quat.slerp(rotation, targetR, alpha);
 
 
         //Vec3.lerp(ref scale, ref targetS, alpha, out scale);
-        scale = Vec3.lerp(scale, targetS, alpha);
+        //scale = Vec3.lerp(scale, targetS, alpha);
+
+
+        translation = targetT;
+        rotation = targetR;
+        scale = targetS;
         return this;
     }
 
@@ -115,6 +115,35 @@ public class BaseAnimationController
         _applying = false;
     }
 
+    protected void removeAnimation(Animation animation)
+    {
+        foreach(NodeAnimation nodeAnim; animation.nodeAnimations)
+            nodeAnim.node.isAnimated = false;
+    }
+
+    protected void applyAnimation (Animation animation, float time) 
+    {
+        if (_applying) throw new Exception("Call end() first");
+        applyAnimation(null, 1.0f, animation, time);
+        target.calculateTransforms();
+    }
+
+    protected void applyAnimations (Animation anim1, float time1, Animation anim2, float time2, float weight) {
+        if (anim2 is null || weight == 0.0f)
+            applyAnimation(anim1, time1);
+        else if (anim1 is null || weight == 1.0f)
+            applyAnimation(anim2, time2);
+        else if (_applying)
+            throw new Exception("Call end() first");
+        else {
+            begin();
+            apply(anim1, time1, 1.0f);
+            apply(anim2, time2, weight);
+            end();
+        }
+    }
+      
+
     private static int getFirstKeyframeIndexAtTime(T)(ref NodeKeyframe!T[] arr, float time)
     {
         int n = cast(int) arr.length - 1;
@@ -145,7 +174,8 @@ public class BaseAnimationController
             auto secondKeyframe = nodeAnim.translation[index];
             float t = (time - firstKeyframe.keytime) / (
                     secondKeyframe.keytime - firstKeyframe.keytime);
-            result = Vec3.lerp(result, secondKeyframe.value, t);
+            //result = Vec3.lerp(result, secondKeyframe.value, t);
+            result = secondKeyframe.value;
         }
         return result;
     }
@@ -166,9 +196,9 @@ public class BaseAnimationController
         if (++index < nodeAnim.rotation.length)
         {
             auto secondKeyframe = nodeAnim.rotation[index];
-            float t = (time - firstKeyframe.keytime) / (
-                    secondKeyframe.keytime - firstKeyframe.keytime);
-            result = Quat.slerp(result, secondKeyframe.value, t);
+            float t = (time - firstKeyframe.keytime) / (secondKeyframe.keytime - firstKeyframe.keytime);
+            //result = Quat.slerp(result, secondKeyframe.value, t);
+            result = secondKeyframe.value;
         }
         return result;
     }
@@ -191,7 +221,8 @@ public class BaseAnimationController
             auto secondKeyframe = nodeAnim.scaling[index];
             float t = (time - firstKeyframe.keytime) / (
                     secondKeyframe.keytime - firstKeyframe.keytime);
-            result = Vec3.lerp(result, secondKeyframe.value, t);
+            //result = Vec3.lerp(result, secondKeyframe.value, t);
+            result = secondKeyframe.value;
         }
         return result;
     }
@@ -235,8 +266,7 @@ public class BaseAnimationController
         }
     }
 
-    protected static void applyAnimation(Transform[Node] outt, float alpha,
-            Animation animation, float time)
+    protected static void applyAnimation(Transform[Node] outt, float alpha, Animation animation, float time)
     {
         if (outt is null)
         {
@@ -267,4 +297,197 @@ public class BaseAnimationController
             }
         }
     }
+}
+
+import arc.pool;
+
+public class AnimationController : BaseAnimationController
+{
+    public class AnimationDesc
+    {
+        public Animation animation;
+        public float speed = 0f;
+        public float time = 0f;
+        public float offset = 0f;
+        public float duration = 0f;
+        public int loopCount = 0;
+
+        protected float update(float dt)
+        {
+            if(loopCount != 0 && animation !is null)
+            {
+                int loops = 0;
+                float diff = speed * dt;
+                if(duration != 0f)
+                {
+                    time += diff;
+                    loops = cast(int) abs(time / duration);
+                    if(time < 0f)
+                    {
+                        loops++;
+                        while(time < 0f)
+                            time += duration;
+                    }
+                    time = abs(time % duration);
+                }
+                else loops = 1;
+
+                for (int i = 0; i < loops; i++)
+                {
+                    if (loopCount > 0) loopCount--;
+                    if (loopCount != 0) 
+                    {
+                        //onLoop?.Invoke(this);
+                    }
+                    if (loopCount == 0)
+                    {
+                        float result = ((loops - 1) - i) * duration + (diff < 0f ? duration - time : time);
+                        time = (diff < 0f) ? 0f : duration;
+                        
+                        //onEnd?.Invoke(this);
+                        
+                        return result;
+                    }
+                }
+                return 0f;
+            }
+            else
+                return dt;
+        }
+    }
+    private Pool!AnimationDesc animationPool;
+    public AnimationDesc current;
+    public AnimationDesc queued;
+    public float queuedTransitionTime = 0f;
+    public AnimationDesc previous;
+    public float transitionCurrentTime = 0f;
+    public float transitionTargetTime = 0f;
+    public bool inAction;
+    public bool paused;
+    public bool allowSameAnimation;
+    private bool justChangedAnimation;
+
+    public this(ModelInstance target)
+    {
+        super(target);
+        animationPool = new class Pool!AnimationDesc{
+            protected override AnimationDesc newObject()
+            {
+                return new AnimationDesc;
+            }
+        };
+    }
+
+    private AnimationDesc obtain(Animation anim, float offset, float duration, int loopCount, float speed)
+    {
+        if (anim is null)
+            return null;
+        AnimationDesc result = animationPool.obtain();
+        result.animation = anim;
+        result.loopCount = loopCount;
+        result.speed = speed;
+        result.offset = offset;
+        result.duration = duration < 0 ? (anim.duration - offset) : duration;
+        result.time = speed < 0 ? result.duration : 0.0f;
+        return result;
+    }
+
+    private AnimationDesc obtain(string id, float offset, float duration, int loopCount, float speed)
+    {
+        if (id.length == 0)
+            return null;
+        Animation anim = target.getAnimation(id);
+        if (anim is null)
+            throw new Exception("Unknown animation: ", id);
+        return obtain(anim, offset, duration, loopCount, speed);
+    }
+
+    public void update (float delta) 
+    {
+        if (paused) return;
+        if (previous !is null && ((transitionCurrentTime += delta) >= transitionTargetTime)) {
+            removeAnimation(previous.animation);
+            justChangedAnimation = true;
+            animationPool.free(previous);
+            previous = null;
+        }
+        if (justChangedAnimation) {
+            target.calculateTransforms();
+            justChangedAnimation = false;
+        }
+        if (current is null || current.loopCount == 0 || current.animation is null) return;
+        float remain = current.update(delta);
+        if (remain != 0f && queued !is null) {
+            inAction = false;
+            animate(queued, queuedTransitionTime);
+            queued = null;			
+            update(remain);
+            return;
+        }
+        if (previous !is null)
+            applyAnimations(previous.animation, previous.offset + previous.time, current.animation, current.offset + current.time,
+                transitionCurrentTime / transitionTargetTime);
+        else
+            applyAnimation(current.animation, current.offset + current.time);
+    }
+
+    protected AnimationDesc animate(AnimationDesc anim, float transitionTime)
+    {
+        if (current is null)
+            current = anim;
+        else if (inAction)
+            queue(anim, transitionTime);
+        else if (!allowSameAnimation && anim !is null && current.animation == anim.animation) {
+            anim.time = current.time;
+            animationPool.free(current);
+            current = anim;
+        } else {
+            if (previous !is null) {
+                removeAnimation(previous.animation);
+                animationPool.free(previous);
+            }
+            previous              = current;
+            current               = anim;
+            transitionCurrentTime = 0f;
+            transitionTargetTime  = transitionTime;
+        }
+        return anim;
+    }
+
+    public AnimationDesc animate(string id, float offset = 0f, float duration = -1f, int loopCount = -1, float speed = 1,
+            float transitionTime = 0f)
+    {
+        auto desc = obtain(id, offset, duration, loopCount, speed);
+        return animate(desc, transitionTime);
+    }
+    protected AnimationDesc queue (AnimationDesc anim, float transitionTime) {
+        if (current is null || current.loopCount == 0)
+            animate(anim, transitionTime);
+        else {
+            if (queued !is null) animationPool.free(queued);
+            queued               = anim;
+            queuedTransitionTime = transitionTime;
+            if (current.loopCount < 0) current.loopCount = 1;
+        }
+        return anim;
+    }
+    public AnimationDesc setAnimation (string id, float offset = 0f, float duration = -1f, int loopCount = -1, float speed = 1f) {
+            return setAnimation(obtain(id, offset, duration, loopCount, speed));
+    }
+    protected AnimationDesc setAnimation(AnimationDesc anim)
+    {
+        if (current is null)
+            current = anim;
+        else {
+            if (!allowSameAnimation && anim !is null && current.animation == anim.animation)
+                anim.time = current.time;
+            else
+                removeAnimation(current.animation);
+            animationPool.free(current);
+            current = anim;
+        }
+        justChangedAnimation = true;
+        return anim;
+    }
+    
 }

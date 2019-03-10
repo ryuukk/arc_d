@@ -183,6 +183,11 @@ public class ShaderProgram
             _attributeTypes[name] = type;
             _attributeSizes[name] = size;
             _attributeNames[i] = name;
+            
+            //version(DEBUG_SHADER)
+            {
+                writeln("ATTRIBUTE: ", name);
+            }
         }
     }
 
@@ -208,7 +213,7 @@ public class ShaderProgram
             _uniformSizes[name] = size;
             _uniformNames[i] = name;
 
-            version(DEBUG_SHADER)
+            //version(DEBUG_SHADER)
             {
                 writeln("UNIFORM: ", name);
             }
@@ -330,6 +335,13 @@ public class ShaderProgram
         checkManaged();
         int location = fetchUniformLocation(name);
         glUniformMatrix4fv(location, 1, transpose, value.val.ptr);
+    }
+
+    public void setUniformMat4Array(string name, ref Mat4[] value, bool transpose = false)
+    {
+        checkManaged();
+        int location = fetchUniformLocation(name);
+        glUniformMatrix4fv(location, cast(int) value.length, transpose, cast(const(float)*) value.ptr);
     }
 
     public void setUniformVec4(string name, Vec4 value)
@@ -632,7 +644,7 @@ public class DefaultShaderProvider : BaseShaderProvider
         vs ~= config.vertexShader;
         fs ~= config.fragmentShader;
 
-        version(DEBUG_SHADER_REFIX)
+        //version(DEBUG_SHADER_REFIX)
         {
             writeln("---");
 
@@ -789,6 +801,11 @@ public class DefaultShader : BaseShader
     public override void render(Renderable renderable, Attributes attributes)
     {
         program.setUniformMat4("u_worldTrans", renderable.worldTransform);
+        if(config.numBones > 0 && renderable.bones.length > 0)
+        {
+            program.setUniformMat4Array("u_bones", renderable.bones);
+        }
+        
         bindMaterial(attributes);
 
         super.render(renderable, attributes);
@@ -916,7 +933,9 @@ public class DefaultShader : BaseShader
         //	strBuilder.put("#define " ~ FloatAttribute.ShininessAlias ~ "Flag\n");
         //if ((attributesMask & FloatAttribute.AlphaTest) == FloatAttribute.AlphaTest)
         //	strBuilder.put("#define " ~ FloatAttribute.AlphaTestAlias ~ "Flag\n");
-        //if (renderable.bones.length > 0 && config.numBones > 0) strBuilder.put("#define numBones " ~ config.numBones ~ "\n");
+
+
+        if (renderable.bones.length > 0 && config.numBones > 0) strBuilder.put(format("#define numBones %s\n", config.numBones));
 
         return strBuilder.data;
     }

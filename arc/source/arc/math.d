@@ -14,8 +14,8 @@ public const float RAD2DEG = 180.0f / PI;
 
 public struct Vec2
 {
-    public float x;
-    public float y;
+    public float x = 0f;
+    public float y = 0f;
 
     public this(float x, float y)
     {
@@ -239,7 +239,7 @@ public struct Mat4
         return this;
     }
 
-    public static Mat4 inv(Mat4 mat)
+    public static Mat4 inv(in Mat4 mat)
     {
 		float l_det = mat.val[M30] * mat.val[M21] * mat.val[M12] * mat.val[M03] - mat.val[M20] * mat.val[M31] * mat.val[M12] * mat.val[M03] - mat.val[M30] * mat.val[M11]
 			* mat.val[M22] * mat.val[M03] + mat.val[M10] * mat.val[M31] * mat.val[M22] * mat.val[M03] + mat.val[M20] * mat.val[M11] * mat.val[M32] * mat.val[M03] - mat.val[M10]
@@ -580,10 +580,10 @@ public struct Mat4
 
 public struct Quat
 {
-    public float x;
-    public float y;
-    public float z;
-    public float w;
+    public float x = 0f;
+    public float y = 0f;
+    public float z = 0f;
+    public float w = 0f;
 
     public this(float x, float y, float z, float w)
     {

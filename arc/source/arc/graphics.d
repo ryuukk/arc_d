@@ -136,11 +136,11 @@ public class Graphics
 
 	private StopWatch _sw;
 	private long _lastFrameTime = -1;
-	private float _deltaTime;
-	private long _frameId;
+	private float _deltaTime = 0;
+	private long _frameId = 0;
 	private long _frameCounterStart = 0;
-	private int _frames;
-	private int _fps;
+	private int _frames = 0;
+	private int _fps = 0;
 
 	private IApp _app;
 	private Configuration _config;
@@ -265,8 +265,11 @@ public class Graphics
 		glfwMakeContextCurrent(_window);
 
 		track();
+		if(deltaTime > 0)
+		{
 		_app.update(deltaTime);
 		_app.render(deltaTime);
+		}
 		glfwSwapBuffers(_window);
 	}
 

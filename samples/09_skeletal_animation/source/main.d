@@ -25,12 +25,14 @@ import arc.gfx.modelloader;
 import arc.gfx.material;
 import arc.gfx.renderable;
 import arc.gfx.rendering;
+import arc.gfx.animation;
 
 public class MyGame : IApp
 {
     PerspectiveCamera _cam;
     Model _model;
     ModelInstance _modelInstance;
+    AnimationController _animController;
 
     float _a = 0f;
 
@@ -55,7 +57,11 @@ public class MyGame : IApp
 
         _modelInstance = new ModelInstance(_model);
 
-        _batch = new RenderableBatch(new DefaultShaderProvider("data/default.vert".readText, "data/default.frag".readText));
+        _animController = new AnimationController(_modelInstance);
+        auto desc = _animController.setAnimation("run_1h");
+
+        _batch = new RenderableBatch(new DefaultShaderProvider("data/default.vert".readText,
+                "data/default.frag".readText));
 
         GC.collect();
     }
@@ -63,6 +69,8 @@ public class MyGame : IApp
     public void update(float dt)
     {
         _a += dt * 2;
+        _animController.update(dt);
+        _modelInstance.calculateTransforms();
     }
 
     public void render(float dt)
@@ -75,16 +83,16 @@ public class MyGame : IApp
         glEnable(GL_DEPTH_TEST);
 
         _batch.begin(_cam);
-
-        for(int x = -2; x < 3; x++)
+        for (int x = -2; x < 3; x++)
         {
-            for(int y = -2; y < 3; y++)
+            for (int y = -2; y < 3; y++)
             {
-                _modelInstance.transform.set(Vec3(x*2, 0, y*2), Quat.fromAxis(0, 1, 0, _a));
+                _modelInstance.transform.set(Vec3(x * 2, 0, y * 2), Quat.fromAxis(0, 1, 0, _a));
                 _modelInstance.calculateTransforms();
                 _batch.render(_modelInstance);
             }
         }
+
         _batch.end();
     }
 

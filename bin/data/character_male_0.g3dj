@@ -2824,7 +2824,7 @@
           "boneId": "Armature__ass_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.144779, 0.948865,-0.000000
               ],
@@ -3081,7 +3081,7 @@
           "boneId": "Armature__root",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000, 0.000000,-0.000000
               ],
@@ -3338,7 +3338,7 @@
           "boneId": "Armature__spine",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000, 0.000000,-0.722670
               ],
@@ -3595,7 +3595,7 @@
           "boneId": "Armature__leg_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.144779, 0.031928,-0.008194
               ],
@@ -3852,7 +3852,7 @@
           "boneId": "Armature__front_leg_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.000000,-0.000000,-0.272164
               ],
@@ -4109,7 +4109,7 @@
           "boneId": "Armature__foot_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000, 0.000000,-0.293736
               ],
@@ -4366,7 +4366,7 @@
           "boneId": "Armature__body",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000, 0.000000,-0.206778
               ],
@@ -4623,7 +4623,7 @@
           "boneId": "Armature__torso",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000, 0.000000,-0.222393
               ],
@@ -4880,7 +4880,7 @@
           "boneId": "Armature__shoulder_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.181585,-0.082057,-0.268609
               ],
@@ -5137,7 +5137,7 @@
           "boneId": "Armature__arm_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000,-0.000000,-0.199096
               ],
@@ -5394,7 +5394,7 @@
           "boneId": "Armature__front_arm_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.000000,-0.000000,-0.161593
               ],
@@ -5651,7 +5651,7 @@
           "boneId": "Armature__hand_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000,-0.000000,-0.309799
               ],
@@ -5908,7 +5908,7 @@
           "boneId": "Armature__head",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000, 0.000000,-0.395027
               ],
@@ -6165,7 +6165,7 @@
           "boneId": "Armature__shoulder_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.181585,-0.082057,-0.268609
               ],
@@ -6422,7 +6422,7 @@
           "boneId": "Armature__arm_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.000000,-0.000000,-0.199096
               ],
@@ -6679,7 +6679,7 @@
           "boneId": "Armature__front_arm_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000,-0.000000,-0.161593
               ],
@@ -6936,7 +6936,7 @@
           "boneId": "Armature__hand_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000,-0.000000,-0.309799
               ],
@@ -7193,7 +7193,7 @@
           "boneId": "Armature__leg_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.144779, 0.031928,-0.008194
               ],
@@ -7450,7 +7450,7 @@
           "boneId": "Armature__front_leg_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.000000, 0.000000,-0.272164
               ],
@@ -7707,7 +7707,7 @@
           "boneId": "Armature__foot_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.000000, 0.000000,-0.293736
               ],
@@ -7964,7 +7964,7 @@
           "boneId": "Armature__ass_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.144779, 0.948865,-0.000000
               ],
@@ -8221,7 +8221,7 @@
           "boneId": "Armature__front_leg_l.001",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.144779, 0.165417,-0.000000
               ],
@@ -8478,7 +8478,7 @@
           "boneId": "Armature__front_leg_r.001",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.144779, 0.165417,-0.000000
               ],
@@ -8735,7 +8735,7 @@
           "boneId": "Armature__pole_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.144779, 0.459152, 0.513965
               ],
@@ -8992,7 +8992,7 @@
           "boneId": "Armature__pole_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.144779, 0.459152, 0.513965
               ],
@@ -9254,7 +9254,7 @@
           "boneId": "Armature__ass_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.144779, 0.948865,-0.000000
               ],
@@ -9511,7 +9511,7 @@
           "boneId": "Armature__root",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000, 0.100000,-0.000000
               ],
@@ -9768,7 +9768,7 @@
           "boneId": "Armature__spine",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000, 0.000000,-0.722670
               ],
@@ -10025,7 +10025,7 @@
           "boneId": "Armature__leg_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.144779, 0.031928,-0.008194
               ],
@@ -10282,7 +10282,7 @@
           "boneId": "Armature__front_leg_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.000000,-0.000000,-0.272164
               ],
@@ -10539,7 +10539,7 @@
           "boneId": "Armature__foot_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000, 0.000000,-0.293736
               ],
@@ -10796,7 +10796,7 @@
           "boneId": "Armature__body",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000, 0.000000,-0.206778
               ],
@@ -11053,7 +11053,7 @@
           "boneId": "Armature__torso",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000, 0.000000,-0.222393
               ],
@@ -11310,7 +11310,7 @@
           "boneId": "Armature__shoulder_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.181585,-0.082057,-0.268609
               ],
@@ -11567,7 +11567,7 @@
           "boneId": "Armature__arm_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000,-0.000000,-0.199096
               ],
@@ -11824,7 +11824,7 @@
           "boneId": "Armature__front_arm_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.000000,-0.000000,-0.161593
               ],
@@ -12081,7 +12081,7 @@
           "boneId": "Armature__hand_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000,-0.000000,-0.309799
               ],
@@ -12338,7 +12338,7 @@
           "boneId": "Armature__head",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000, 0.000000,-0.395027
               ],
@@ -12595,7 +12595,7 @@
           "boneId": "Armature__shoulder_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.181585,-0.082057,-0.268609
               ],
@@ -12852,7 +12852,7 @@
           "boneId": "Armature__arm_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.000000,-0.000000,-0.199096
               ],
@@ -13109,7 +13109,7 @@
           "boneId": "Armature__front_arm_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000,-0.000000,-0.161593
               ],
@@ -13366,7 +13366,7 @@
           "boneId": "Armature__hand_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.000000,-0.000000,-0.309799
               ],
@@ -13623,7 +13623,7 @@
           "boneId": "Armature__leg_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.144779, 0.031928,-0.008194
               ],
@@ -13880,7 +13880,7 @@
           "boneId": "Armature__front_leg_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.000000, 0.000000,-0.272164
               ],
@@ -14137,7 +14137,7 @@
           "boneId": "Armature__foot_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.000000, 0.000000,-0.293736
               ],
@@ -14394,7 +14394,7 @@
           "boneId": "Armature__ass_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.144779, 0.948865,-0.000000
               ],
@@ -14651,7 +14651,7 @@
           "boneId": "Armature__front_leg_l.001",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.144779, 0.165417,-0.000000
               ],
@@ -14908,7 +14908,7 @@
           "boneId": "Armature__front_leg_r.001",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.144779, 0.165417,-0.000000
               ],
@@ -15165,7 +15165,7 @@
           "boneId": "Armature__pole_l",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                  0.144779, 0.459152, 0.513965
               ],
@@ -15422,7 +15422,7 @@
           "boneId": "Armature__pole_r",
           "keyframes": [
             {
-              "keytime": -41.666667,
+              "keytime": 0.0,
               "translation": [
                 -0.144779, 0.459152, 0.513965
               ],

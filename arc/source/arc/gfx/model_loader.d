@@ -8,6 +8,7 @@ import arc.pool;
 import arc.math;
 import arc.color;
 import arc.core;
+import arc.collections.arraymap;
 import arc.gfx.node;
 import arc.gfx.material;
 import arc.gfx.animation;
@@ -54,6 +55,7 @@ private void parseAnimations(ModelData model, JSONValue json)
 
             ModelAnimation animation = new ModelAnimation;
             model.animations[i] = animation;
+            animation.id = anim["id"].str;
             animation.nodeAnimations.length = nodes.length;
             foreach (j, JSONValue node; nodes)
             {
@@ -214,7 +216,8 @@ private ModelNode parseNodesRecursively(JSONValue json)
             if ("bones" in material)
             {
                 JSONValue[] bones = material["bones"].array;
-
+                nodePart.bones = new ArrayMap!(string, Mat4);
+                nodePart.bones.resize(cast(int) bones.length);
                 foreach (j, JSONValue bone; bones)
                 {
                     string nodeId = bone["node"].str;
@@ -230,7 +233,7 @@ private ModelNode parseNodesRecursively(JSONValue json)
                             rotation[2].floating, rotation[3].floating,
                             scale[0].floating, scale[1].floating, scale[2].floating);
 
-                    nodePart.bones[nodeId] = transform;
+                    nodePart.bones.put(nodeId, transform);
                 }
             }
 
@@ -474,7 +477,7 @@ public class ModelNodePart
 {
     public string materialId;
     public string meshPartId;
-    public Mat4[string] bones;
+    public ArrayMap!(string, Mat4) bones;
     public int[][] uvMapping;
 }
 

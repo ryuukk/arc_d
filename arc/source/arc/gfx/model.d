@@ -7,6 +7,7 @@ import arc.pool;
 import arc.math;
 import arc.color;
 import arc.core;
+import arc.collections.arraymap;
 import arc.gfx.node;
 import arc.gfx.material;
 import arc.gfx.animation;
@@ -50,7 +51,10 @@ public class ModelInstance : IRenderableProvider
 
     private void copyAnimations(Model model)
     {
-        animations.length = model.animations.length;
+        foreach(sourceAnim; model.animations)
+        {
+            copyAnimation(sourceAnim, defaultShareKeyframes);
+        }
     }
 
     private void copyAnimation(Animation sourceAnim, bool shareKeyFrames)
@@ -58,7 +62,6 @@ public class ModelInstance : IRenderableProvider
         Animation animation = new Animation;
         animation.id = sourceAnim.id;
         animation.duration = sourceAnim.duration;
-
         foreach (i, NodeAnimation nanim; sourceAnim.nodeAnimations)
         {
             Node node = getNode(nodes, nanim.node.id);
@@ -79,11 +82,23 @@ public class ModelInstance : IRenderableProvider
                 nodeAnim.rotation.length = nanim.rotation.length;
                 nodeAnim.scaling.length = nanim.scaling.length;
                 foreach (j, kf; nanim.translation)
-                    nodeAnim.translation[j] = new NodeKeyframe!Vec3(kf.keytime, kf.value);
+                    {
+                        nodeAnim.translation[j] = new NodeKeyframe!Vec3;
+                        nodeAnim.translation[j].keytime = kf.keytime;
+                        nodeAnim.translation[j].value = kf.value;
+                    }
                 foreach (j, kf; nanim.rotation)
-                    nodeAnim.rotation[j] = new NodeKeyframe!Quat(kf.keytime, kf.value);
+                    {
+                        nodeAnim.rotation[j] = new NodeKeyframe!Quat;
+                        nodeAnim.rotation[j].keytime = kf.keytime;
+                        nodeAnim.rotation[j].value =kf.value;
+                    }
                 foreach (j, kf; nanim.scaling)
-                    nodeAnim.scaling[j] = new NodeKeyframe!Vec3(kf.keytime, kf.value);
+                    {
+                        nodeAnim.scaling[j] = new NodeKeyframe!Vec3;
+                        nodeAnim.scaling[j].keytime = kf.keytime;
+                        nodeAnim.scaling[j].value = kf.value;
+                    }
             }
             if (nodeAnim.translation.length > 0 || nodeAnim.rotation.length > 0
                     || nodeAnim.scaling.length > 0)
@@ -110,6 +125,50 @@ public class ModelInstance : IRenderableProvider
 
     public void invalidate()
     {
+		for (int i = 0, n = cast(int)nodes.length; i < n; ++i) {
+			invalidate(nodes[i]);
+		}
+    }
+
+    private void invalidate(Node node)
+    {
+        for (int i = 0, n = cast(int)node.parts.length; i < n; ++i)
+        {
+	        NodePart part = node.parts[i];
+			auto bindPose = part.invBoneBindTransforms;
+			if (bindPose !is null) {
+				for (int j = 0; j < bindPose.size; ++j) {
+					bindPose.keys[j] = getNode(nodes, bindPose.keys[j].id);
+				}
+			}
+            // todo: finish
+			//if (!materials.contains(part.material, true)) {
+			//	final int midx = materials.indexOf(part.material, false);
+			//	if (midx < 0)
+			//		materials.add(part.material = part.material.copy());
+			//	else
+			//		part.material = materials.get(midx);
+			//}
+        }
+    }
+
+    public Animation getAnimation(string id, bool ignoreCase = false)
+    {
+        int n = cast(int) animations.length;
+
+        if(ignoreCase)
+        {
+            throw new Exception("Not supported yet");
+        }
+        else
+        {
+            foreach(animation; animations)
+            {
+                if(animation.id == id) return animation;
+            }
+        }
+
+        return null;
     }
 
     public void getRenderables(ref Array!Renderable renderables, Pool!Renderable pool)
@@ -240,7 +299,8 @@ public class Model
         materials ~= result;
     }
 
-    Mat4[string][NodePart] nodePartBones;
+    ArrayMap!(string, Mat4)[NodePart] nodePartBones;
+
     private void loadNodes(ModelNode[] modelNodes)
     {
         nodePartBones.clear();
@@ -251,11 +311,21 @@ public class Model
 
         foreach(e; nodePartBones.byKeyValue())
         {
+            if(e.key.invBoneBindTransforms is null)
+                e.key.invBoneBindTransforms = new ArrayMap!(Node, Mat4);
+
             e.key.invBoneBindTransforms.clear();
-            foreach(b; e.value.byKeyValue())
+            e.key.invBoneBindTransforms.resize(e.value.size);
+
+            for(int i = 0; i < e.value.size; i++)
             {
-                Node node = getNode(nodes, b.key);
-                e.key.invBoneBindTransforms[node] = Mat4.inv(b.value);
+                string k = e.value.keys[i];
+                Mat4 v = e.value.values[i];
+                Node node = getNode(nodes, k);
+
+                if(node is null) throw new Exception("yo");
+                
+                e.key.invBoneBindTransforms.put(node, Mat4.inv(v));
             }
         }
     }
@@ -306,7 +376,7 @@ public class Model
                     nodePart.material = meshMaterial;
                     node.parts[i] = nodePart;
 
-                    if (modelNodePart.bones.length > 0)
+                    if (modelNodePart.bones !is null)
                     {
                         nodePartBones[nodePart] = modelNodePart.bones;
                     }
@@ -320,6 +390,7 @@ public class Model
             foreach (i, ModelNode child; modelNode.children)
             {
                 node.children[i] = loadNode(child);
+                node.children[i].parent = node;
             }
         }
 
@@ -351,8 +422,11 @@ public class Model
                     {
                         if (kf.keytime > animation.duration)
                             animation.duration = kf.keytime;
+
                         // todo: some might not have value, so we might was take node translation instead
-                        nodeAnim.translation[k] = new NodeKeyframe!Vec3(kf.keytime, kf.value);
+                        nodeAnim.translation[k] = new NodeKeyframe!Vec3;
+                        nodeAnim.translation[k].keytime = kf.keytime;
+                        nodeAnim.translation[k].value = kf.value;
                     }
                 }
 
@@ -364,7 +438,9 @@ public class Model
                         if (kf.keytime > animation.duration)
                             animation.duration = kf.keytime;
                         // todo: some might not have value, so we might was take node translation instead
-                        nodeAnim.rotation[k] = new NodeKeyframe!Quat(kf.keytime, kf.value);
+                        nodeAnim.rotation[k] = new NodeKeyframe!Quat;
+                        nodeAnim.rotation[k].keytime = kf.keytime;
+                        nodeAnim.rotation[k].value = kf.value;
                     }
                 }
 
@@ -376,7 +452,9 @@ public class Model
                         if (kf.keytime > animation.duration)
                             animation.duration = kf.keytime;
                         // todo: some might not have value, so we might was take node translation instead
-                        nodeAnim.scaling[k] = new NodeKeyframe!Vec3(kf.keytime, kf.value);
+                        nodeAnim.scaling[k] = new NodeKeyframe!Vec3;
+                        nodeAnim.scaling[k].keytime = kf.keytime;
+                        nodeAnim.scaling[k].value = kf.value;
                     }
                 }
 
