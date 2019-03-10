@@ -17,6 +17,7 @@ import arc.gfx.texture;
 import arc.gfx.batch;
 import arc.gfx.camera;
 import arc.gfx.model;
+import arc.gfx.modelloader;
 import arc.gfx.material;
 
 string vs = "
