@@ -124,6 +124,15 @@ public struct Vec3
     {
         return sqrt(x * x + y * y + z * z);
     }
+
+    public static Vec3 lerp(in Vec3 a, in Vec3 b, float amount)
+    {
+        Vec3 v;
+        v.x = a.x + (b.x - a.x) * amount;
+        v.y = a.y + (b.y - a.y) * amount;
+        v.z = a.z + (b.z - a.z) * amount;
+        return v;
+    }
 }
 
 public struct Vec4
@@ -209,7 +218,7 @@ public struct Mat4
         return ret;
     }
 
-    public Mat4 idt()
+    public ref Mat4 idt()
     {
         val[M00] = 1f;
         val[M01] = 0f;
@@ -229,6 +238,71 @@ public struct Mat4
         val[M33] = 1f;
         return this;
     }
+
+    public static Mat4 inv(Mat4 mat)
+    {
+		float l_det = mat.val[M30] * mat.val[M21] * mat.val[M12] * mat.val[M03] - mat.val[M20] * mat.val[M31] * mat.val[M12] * mat.val[M03] - mat.val[M30] * mat.val[M11]
+			* mat.val[M22] * mat.val[M03] + mat.val[M10] * mat.val[M31] * mat.val[M22] * mat.val[M03] + mat.val[M20] * mat.val[M11] * mat.val[M32] * mat.val[M03] - mat.val[M10]
+			* mat.val[M21] * mat.val[M32] * mat.val[M03] - mat.val[M30] * mat.val[M21] * mat.val[M02] * mat.val[M13] + mat.val[M20] * mat.val[M31] * mat.val[M02] * mat.val[M13]
+			+ mat.val[M30] * mat.val[M01] * mat.val[M22] * mat.val[M13] - mat.val[M00] * mat.val[M31] * mat.val[M22] * mat.val[M13] - mat.val[M20] * mat.val[M01] * mat.val[M32]
+			* mat.val[M13] + mat.val[M00] * mat.val[M21] * mat.val[M32] * mat.val[M13] + mat.val[M30] * mat.val[M11] * mat.val[M02] * mat.val[M23] - mat.val[M10] * mat.val[M31]
+			* mat.val[M02] * mat.val[M23] - mat.val[M30] * mat.val[M01] * mat.val[M12] * mat.val[M23] + mat.val[M00] * mat.val[M31] * mat.val[M12] * mat.val[M23] + mat.val[M10]
+			* mat.val[M01] * mat.val[M32] * mat.val[M23] - mat.val[M00] * mat.val[M11] * mat.val[M32] * mat.val[M23] - mat.val[M20] * mat.val[M11] * mat.val[M02] * mat.val[M33]
+			+ mat.val[M10] * mat.val[M21] * mat.val[M02] * mat.val[M33] + mat.val[M20] * mat.val[M01] * mat.val[M12] * mat.val[M33] - mat.val[M00] * mat.val[M21] * mat.val[M12]
+			* mat.val[M33] - mat.val[M10] * mat.val[M01] * mat.val[M22] * mat.val[M33] + mat.val[M00] * mat.val[M11] * mat.val[M22] * mat.val[M33];
+		if (l_det == 0f) throw new Exception("non-invertible matrix");
+		float inv_det = 1.0f / l_det;
+        Mat4 tmp = Mat4.identity;
+		tmp.val[M00] = mat.val[M12] * mat.val[M23] * mat.val[M31] - mat.val[M13] * mat.val[M22] * mat.val[M31] + mat.val[M13] * mat.val[M21] * mat.val[M32] - mat.val[M11]
+			* mat.val[M23] * mat.val[M32] - mat.val[M12] * mat.val[M21] * mat.val[M33] + mat.val[M11] * mat.val[M22] * mat.val[M33];
+		tmp.val[M01] = mat.val[M03] * mat.val[M22] * mat.val[M31] - mat.val[M02] * mat.val[M23] * mat.val[M31] - mat.val[M03] * mat.val[M21] * mat.val[M32] + mat.val[M01]
+			* mat.val[M23] * mat.val[M32] + mat.val[M02] * mat.val[M21] * mat.val[M33] - mat.val[M01] * mat.val[M22] * mat.val[M33];
+		tmp.val[M02] = mat.val[M02] * mat.val[M13] * mat.val[M31] - mat.val[M03] * mat.val[M12] * mat.val[M31] + mat.val[M03] * mat.val[M11] * mat.val[M32] - mat.val[M01]
+			* mat.val[M13] * mat.val[M32] - mat.val[M02] * mat.val[M11] * mat.val[M33] + mat.val[M01] * mat.val[M12] * mat.val[M33];
+		tmp.val[M03] = mat.val[M03] * mat.val[M12] * mat.val[M21] - mat.val[M02] * mat.val[M13] * mat.val[M21] - mat.val[M03] * mat.val[M11] * mat.val[M22] + mat.val[M01]
+			* mat.val[M13] * mat.val[M22] + mat.val[M02] * mat.val[M11] * mat.val[M23] - mat.val[M01] * mat.val[M12] * mat.val[M23];
+		tmp.val[M10] = mat.val[M13] * mat.val[M22] * mat.val[M30] - mat.val[M12] * mat.val[M23] * mat.val[M30] - mat.val[M13] * mat.val[M20] * mat.val[M32] + mat.val[M10]
+			* mat.val[M23] * mat.val[M32] + mat.val[M12] * mat.val[M20] * mat.val[M33] - mat.val[M10] * mat.val[M22] * mat.val[M33];
+		tmp.val[M11] = mat.val[M02] * mat.val[M23] * mat.val[M30] - mat.val[M03] * mat.val[M22] * mat.val[M30] + mat.val[M03] * mat.val[M20] * mat.val[M32] - mat.val[M00]
+			* mat.val[M23] * mat.val[M32] - mat.val[M02] * mat.val[M20] * mat.val[M33] + mat.val[M00] * mat.val[M22] * mat.val[M33];
+		tmp.val[M12] = mat.val[M03] * mat.val[M12] * mat.val[M30] - mat.val[M02] * mat.val[M13] * mat.val[M30] - mat.val[M03] * mat.val[M10] * mat.val[M32] + mat.val[M00]
+			* mat.val[M13] * mat.val[M32] + mat.val[M02] * mat.val[M10] * mat.val[M33] - mat.val[M00] * mat.val[M12] * mat.val[M33];
+		tmp.val[M13] = mat.val[M02] * mat.val[M13] * mat.val[M20] - mat.val[M03] * mat.val[M12] * mat.val[M20] + mat.val[M03] * mat.val[M10] * mat.val[M22] - mat.val[M00]
+			* mat.val[M13] * mat.val[M22] - mat.val[M02] * mat.val[M10] * mat.val[M23] + mat.val[M00] * mat.val[M12] * mat.val[M23];
+		tmp.val[M20] = mat.val[M11] * mat.val[M23] * mat.val[M30] - mat.val[M13] * mat.val[M21] * mat.val[M30] + mat.val[M13] * mat.val[M20] * mat.val[M31] - mat.val[M10]
+			* mat.val[M23] * mat.val[M31] - mat.val[M11] * mat.val[M20] * mat.val[M33] + mat.val[M10] * mat.val[M21] * mat.val[M33];
+		tmp.val[M21] = mat.val[M03] * mat.val[M21] * mat.val[M30] - mat.val[M01] * mat.val[M23] * mat.val[M30] - mat.val[M03] * mat.val[M20] * mat.val[M31] + mat.val[M00]
+			* mat.val[M23] * mat.val[M31] + mat.val[M01] * mat.val[M20] * mat.val[M33] - mat.val[M00] * mat.val[M21] * mat.val[M33];
+		tmp.val[M22] = mat.val[M01] * mat.val[M13] * mat.val[M30] - mat.val[M03] * mat.val[M11] * mat.val[M30] + mat.val[M03] * mat.val[M10] * mat.val[M31] - mat.val[M00]
+			* mat.val[M13] * mat.val[M31] - mat.val[M01] * mat.val[M10] * mat.val[M33] + mat.val[M00] * mat.val[M11] * mat.val[M33];
+		tmp.val[M23] = mat.val[M03] * mat.val[M11] * mat.val[M20] - mat.val[M01] * mat.val[M13] * mat.val[M20] - mat.val[M03] * mat.val[M10] * mat.val[M21] + mat.val[M00]
+			* mat.val[M13] * mat.val[M21] + mat.val[M01] * mat.val[M10] * mat.val[M23] - mat.val[M00] * mat.val[M11] * mat.val[M23];
+		tmp.val[M30] = mat.val[M12] * mat.val[M21] * mat.val[M30] - mat.val[M11] * mat.val[M22] * mat.val[M30] - mat.val[M12] * mat.val[M20] * mat.val[M31] + mat.val[M10]
+			* mat.val[M22] * mat.val[M31] + mat.val[M11] * mat.val[M20] * mat.val[M32] - mat.val[M10] * mat.val[M21] * mat.val[M32];
+		tmp.val[M31] = mat.val[M01] * mat.val[M22] * mat.val[M30] - mat.val[M02] * mat.val[M21] * mat.val[M30] + mat.val[M02] * mat.val[M20] * mat.val[M31] - mat.val[M00]
+			* mat.val[M22] * mat.val[M31] - mat.val[M01] * mat.val[M20] * mat.val[M32] + mat.val[M00] * mat.val[M21] * mat.val[M32];
+		tmp.val[M32] = mat.val[M02] * mat.val[M11] * mat.val[M30] - mat.val[M01] * mat.val[M12] * mat.val[M30] - mat.val[M02] * mat.val[M10] * mat.val[M31] + mat.val[M00]
+			* mat.val[M12] * mat.val[M31] + mat.val[M01] * mat.val[M10] * mat.val[M32] - mat.val[M00] * mat.val[M11] * mat.val[M32];
+		tmp.val[M33] = mat.val[M01] * mat.val[M12] * mat.val[M20] - mat.val[M02] * mat.val[M11] * mat.val[M20] + mat.val[M02] * mat.val[M10] * mat.val[M21] - mat.val[M00]
+			* mat.val[M12] * mat.val[M21] - mat.val[M01] * mat.val[M10] * mat.val[M22] + mat.val[M00] * mat.val[M11] * mat.val[M22];
+		tmp.val[M00] = tmp.val[M00] * inv_det;
+		tmp.val[M01] = tmp.val[M01] * inv_det;
+		tmp.val[M02] = tmp.val[M02] * inv_det;
+		tmp.val[M03] = tmp.val[M03] * inv_det;
+		tmp.val[M10] = tmp.val[M10] * inv_det;
+		tmp.val[M11] = tmp.val[M11] * inv_det;
+		tmp.val[M12] = tmp.val[M12] * inv_det;
+		tmp.val[M13] = tmp.val[M13] * inv_det;
+		tmp.val[M20] = tmp.val[M20] * inv_det;
+		tmp.val[M21] = tmp.val[M21] * inv_det;
+		tmp.val[M22] = tmp.val[M22] * inv_det;
+		tmp.val[M23] = tmp.val[M23] * inv_det;
+		tmp.val[M30] = tmp.val[M30] * inv_det;
+		tmp.val[M31] = tmp.val[M31] * inv_det;
+		tmp.val[M32] = tmp.val[M32] * inv_det;
+		tmp.val[M33] = tmp.val[M33] * inv_det;
+		return tmp;
+	}
 
     public float det3x3() 
     {
@@ -555,6 +629,38 @@ public struct Quat
     public static Quat fromAxis(in Vec3 axis, float rad)
     {
         return fromAxis(axis.x, axis.y, axis.z, rad);
+    }
+
+    public static Quat slerp(in Quat quaternion1, Quat quaternion2, float amount)
+    {
+            float num2;
+		    float num3;
+		    Quat quaternion;
+		    float num = amount;
+		    float num4 = (((quaternion1.x * quaternion2.x) + (quaternion1.y * quaternion2.y)) + (quaternion1.z * quaternion2.z)) + (quaternion1.w * quaternion2.w);
+		    bool flag = false;
+		    if (num4 < 0f)
+		    {
+		        flag = true;
+		        num4 = -num4;
+		    }
+		    if (num4 > 0.999999f)
+		    {
+		        num3 = 1f - num;
+		        num2 = flag ? -num : num;
+		    }
+		    else
+		    {
+		        float num5 = acos(num4);
+		        float num6 = (1.0f / sin(num5));
+		        num3 = (sin(((1f - num) * num5))) * num6;
+		        num2 = flag ? (( -sin( (num * num5))) * num6) : (( sin( (num * num5))) * num6);
+		    }
+		    quaternion.x = (num3 * quaternion1.x) + (num2 * quaternion2.x);
+		    quaternion.y = (num3 * quaternion1.y) + (num2 * quaternion2.y);
+		    quaternion.z = (num3 * quaternion1.z) + (num2 * quaternion2.z);
+		    quaternion.w = (num3 * quaternion1.w) + (num2 * quaternion2.w);
+		    return quaternion;
     }
 }
 

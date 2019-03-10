@@ -5,6 +5,7 @@ import std.random;
 import core.memory;
 import std.path;
 import std.file : readText;
+import core.thread;
 
 import bindbc.opengl;
 import bindbc.glfw;
@@ -20,6 +21,7 @@ import arc.gfx.texture;
 import arc.gfx.batch;
 import arc.gfx.camera;
 import arc.gfx.model;
+import arc.gfx.modelloader;
 import arc.gfx.material;
 import arc.gfx.renderable;
 import arc.gfx.rendering;
@@ -43,7 +45,7 @@ public class MyGame : IApp
         _cam.lookAt(0, 0, 0);
         _cam.update();
 
-        auto data = loadModelData("data/tree_small_0.g3dj");
+        auto data = loadModelData("data/character_male_0.g3dj");
         assert(data !is null, "can't parse data");
 
         _model = new Model;
@@ -79,12 +81,11 @@ public class MyGame : IApp
             for(int y = -2; y < 3; y++)
             {
                 _modelInstance.transform.set(Vec3(x*2, 0, y*2), Quat.fromAxis(0, 1, 0, _a));
+                _modelInstance.calculateTransforms();
                 _batch.render(_modelInstance);
             }
-
         }
         _batch.end();
-        
     }
 
     public void resize(int width, int height)
@@ -101,7 +102,7 @@ public class MyGame : IApp
 int main()
 {
     auto config = new Configuration;
-    config.windowTitle = "Sample 08 - RenderableBatch";
+    config.windowTitle = "Sample 09 - Skeletal Animation";
     auto game = new MyGame;
     auto engine = new Engine(game, config);
     engine.run();
