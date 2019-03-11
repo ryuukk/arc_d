@@ -16,7 +16,7 @@ public class Node
     public bool inheritTransform = true;
     public bool isAnimated;
 
-    public Vec3 translation = Vec3(0,0,0);
+    public Vec3 translation = Vec3(0, 0, 0);
     public Quat rotation = Quat.identity;
     public Vec3 scale = Vec3(1, 1, 1);
 
@@ -31,10 +31,9 @@ public class Node
     public void calculateLocalTransform()
     {
         if (!isAnimated)
-            localTransform.idt().set(
-                translation.x, translation.y, translation.z,
-                rotation.x, rotation.y, rotation.z, rotation.w,
-                scale.x, scale.y, scale.z);
+            localTransform.idt().set(translation.x, translation.y,
+                    translation.z, rotation.x, rotation.y, rotation.z,
+                    rotation.w, scale.x, scale.y, scale.z);
     }
 
     public void calculateWorldTransform()
@@ -63,14 +62,13 @@ public class Node
 
         foreach (NodePart part; parts)
         {
-            if (part.invBoneBindTransforms is null ||
-                    part.bones.length == 0 || 
-                    part.invBoneBindTransforms.size != part.bones.length)
-                    {
-                        continue;
-                    }
+            if (part.invBoneBindTransforms is null || part.bones.length == 0
+                    || part.invBoneBindTransforms.size != part.bones.length)
+            {
+                continue;
+            }
             int n = part.invBoneBindTransforms.size;
-            for(int i = 0; i < n; i++)
+            for (int i = 0; i < n; i++)
             {
                 Mat4 globalTransform = part.invBoneBindTransforms.keys[i].globalTransform;
                 Mat4 invTransform = part.invBoneBindTransforms.values[i];
@@ -87,10 +85,11 @@ public class Node
 
     public void detach()
     {
-		if (parent !is null) {
-			parent.removeChild(this);
-			parent = null;
-		}
+        if (parent !is null)
+        {
+            parent.removeChild(this);
+            parent = null;
+        }
     }
 
     public Node copy()
@@ -129,11 +128,14 @@ public class Node
 
     public int addChild(Node child)
     {
-        for (Node p = this; p !is null; p = p.parent) {
-			if (p == child) throw new Exception("Cannot add a parent as a child");
-		}
-		Node p = child.parent;
-		if (p !is null && !p.removeChild(child)) throw new Exception("Could not remove child from its current parent");
+        for (Node p = this; p !is null; p = p.parent)
+        {
+            if (p == child)
+                throw new Exception("Cannot add a parent as a child");
+        }
+        Node p = child.parent;
+        if (p !is null && !p.removeChild(child))
+            throw new Exception("Could not remove child from its current parent");
 
         children ~= child;
         child.parent = this;
@@ -142,22 +144,24 @@ public class Node
 
     public int indexOf(Node child)
     {
-        for(int i = 0; i < children.length; i++)
+        for (int i = 0; i < children.length; i++)
         {
-            if(children[i] == child) return i;
+            if (children[i] == child)
+                return i;
         }
         return -1;
     }
 
-    public bool removeChild (Node child) 
+    public bool removeChild(Node child)
     {
         int index = indexOf(child);
-        if(index == -1) return false;
+        if (index == -1)
+            return false;
 
         children = children.remove(index, index + 1);
-		child.parent = null;
-		return true;
-	}
+        child.parent = null;
+        return true;
+    }
 }
 
 Node getNode(ref Node[] nodes, string id, bool recursive = true, bool ignoreCase = false)
@@ -227,14 +231,15 @@ public class NodePart
         }
         else
         {
-            if(invBoneBindTransforms is null)
-                invBoneBindTransforms = new ArrayMap!(Node, Mat4)(true, other.invBoneBindTransforms.size);
+            if (invBoneBindTransforms is null)
+                invBoneBindTransforms = new ArrayMap!(Node, Mat4)(true,
+                        other.invBoneBindTransforms.size);
             else
                 invBoneBindTransforms.clear();
 
             invBoneBindTransforms.putAll(other.invBoneBindTransforms);
 
-            if(bones.length == 0 || bones.length != invBoneBindTransforms.size)
+            if (bones.length == 0 || bones.length != invBoneBindTransforms.size)
             {
                 bones.length = invBoneBindTransforms.size;
                 for (int i = 0; i < bones.length; i++)
