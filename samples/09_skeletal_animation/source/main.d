@@ -14,13 +14,17 @@ import arc.gfx.model;
 import arc.gfx.modelloader;
 import arc.gfx.rendering;
 import arc.gfx.animation;
+import arc.gfx.renderable;
 
 public class MyGame : IApp
 {
     PerspectiveCamera _cam;
     Model _model;
+    Model _modelStatic;
     ModelInstance _modelInstance;
+    ModelInstance _modelInstanceStatic;
     AnimationController _animController;
+
 
     float _a = 0f;
 
@@ -35,21 +39,32 @@ public class MyGame : IApp
         _cam.lookAt(0, 0, 0);
         _cam.update();
 
-        auto data = loadModelData("data/character_male_0.g3dj");
-        assert(data !is null, "can't parse data");
+        {
+            auto data = loadModelData("data/character_male_0.g3dj");
+            assert(data !is null, "can't parse data");
 
-        _model = new Model;
-        _model.load(data);
+            _model = new Model;
+            _model.load(data);
 
-        writeln("INFO: Model has: ", _model.nodes.length, " nodes");
+            _modelInstance = new ModelInstance(_model);
 
-        _modelInstance = new ModelInstance(_model);
+            _animController = new AnimationController(_modelInstance);
+            auto desc = _animController.animate("run_1h");
+        }
 
-        _animController = new AnimationController(_modelInstance);
-        auto desc = _animController.animate("run_1h");
+        {
+            auto dataStatic = loadModelData("data/tree_small_0.g3dj");
+            assert(dataStatic !is null, "can't parse data");
 
-        _batch = new RenderableBatch(new DefaultShaderProvider("data/default.vert".readText,
-                "data/default.frag".readText));
+            _modelStatic = new Model;
+            _modelStatic.load(dataStatic);
+
+            _modelInstanceStatic = new ModelInstance(_modelStatic);
+        }
+
+
+
+        _batch = new RenderableBatch(new DefaultShaderProvider("data/default.vert".readText, "data/default.frag".readText));
 
         GC.collect();
     }
@@ -70,15 +85,12 @@ public class MyGame : IApp
         glEnable(GL_DEPTH_TEST);
 
         _batch.begin(_cam);
-        for (int x = -2; x < 3; x++)
-        {
-            for (int y = -2; y < 3; y++)
-            {
-                _modelInstance.transform.set(Vec3(x * 2, 0, y * 2), Quat.fromAxis(0, 1, 0, _a));
-                _modelInstance.calculateTransforms();
-                _batch.render(_modelInstance);
-            }
-        }
+
+        _modelInstance.transform.set(Vec3(-2,0,0), Quat.fromAxis(0, 1, 0, _a));
+        _modelInstanceStatic.transform.set(Vec3(2,0,0), Quat.fromAxis(0, 1, 0, _a));
+
+        _batch.render(_modelInstanceStatic);
+        _batch.render(_modelInstance);
 
         _batch.end();
     }
