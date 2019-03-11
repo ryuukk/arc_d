@@ -265,11 +265,8 @@ public class Graphics
 		glfwMakeContextCurrent(_window);
 
 		track();
-		if(deltaTime > 0)
-		{
 		_app.update(deltaTime);
 		_app.render(deltaTime);
-		}
 		glfwSwapBuffers(_window);
 	}
 
@@ -299,8 +296,7 @@ public class Graphics
 
 	public bool shouldClose()
 	{
-		auto _ = to!bool(glfwWindowShouldClose(_window));
-		return _;
+		return glfwWindowShouldClose(_window) == 1;
 	}
 
 	public float deltaTime()
