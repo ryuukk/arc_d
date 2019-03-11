@@ -129,6 +129,34 @@ public class RenderContext
 
 public class RenderableBatch
 {
+    public abstract class FlushablePool(T) : Pool!T
+    {
+        Array!T obtained;
+
+        public this(int initialSize = 16, int maxCapacity = 1024)
+        {
+            super(initialSize, maxCapacity);
+            obtained = new Array!T();
+            obtained.reserve(initialSize);
+        }
+
+        protected override T obtain()
+        {
+            T result = super.obtain();
+            obtain.insert();
+            return result;
+        }
+        protected override void flush()
+        {
+            super.flushAll(obtained);
+            obtained.clear();
+        }
+
+        protected override void free(T object)
+        {
+        }
+
+    }
     public class RenderablePool : Pool!Renderable
     {
         public override Renderable newObject()
@@ -144,6 +172,7 @@ public class RenderableBatch
             renderable.meshPart.set("", null, 0, 0, 0);
             renderable.shader = null;
             renderable.worldTransform = Mat4.identity;
+            renderable.bones.length = 0;
             return renderable;
         }
     }
@@ -157,6 +186,7 @@ public class RenderableBatch
 
     public this(IShaderProvider shaderProvider)
     {
+        renderables.reserve(16);
         renderablesPool = new RenderablePool;
         ownContext = true;
         context = new RenderContext(new TextureBinder);
@@ -182,10 +212,9 @@ public class RenderableBatch
     {
         // sort
         IShader currentShader = null;
-        for (int i = 0; i < renderables.length; i++)
+
+        foreach(renderable; renderables)
         {
-            Renderable renderable = renderables[i];
-            
             if (currentShader !is renderable.shader)
             {
                 if (currentShader !is null)
@@ -199,12 +228,12 @@ public class RenderableBatch
         if (currentShader !is null)
             currentShader.end();
 
-        for (int i = 0; i < renderables.length; i++)
+        foreach(renderable; renderables)
         {
-            Renderable renderable = renderables[i];
             renderablesPool.free(renderable);
         }
         renderables.clear();
+
     }
 
     public void render(Renderable renderable)

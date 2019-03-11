@@ -184,7 +184,7 @@ public class ShaderProgram
             _attributeSizes[name] = size;
             _attributeNames[i] = name;
             
-            //version(DEBUG_SHADER)
+            version(DEBUG_SHADER)
             {
                 writeln("ATTRIBUTE: ", name);
             }
@@ -213,7 +213,7 @@ public class ShaderProgram
             _uniformSizes[name] = size;
             _uniformNames[i] = name;
 
-            //version(DEBUG_SHADER)
+            version(DEBUG_SHADER)
             {
                 writeln("UNIFORM: ", name);
             }
@@ -644,8 +644,9 @@ public class DefaultShaderProvider : BaseShaderProvider
         vs ~= config.vertexShader;
         fs ~= config.fragmentShader;
 
-        //version(DEBUG_SHADER_REFIX)
+        version(DEBUG_SHADER_REFIX)
         {
+            writeln("Needed compile new shader..");
             writeln("---");
 
             writeln("PREFIX:");
@@ -656,6 +657,7 @@ public class DefaultShaderProvider : BaseShaderProvider
 
         ShaderProgram program = new ShaderProgram(vs, fs);
         assert(program.isCompiled(), program.getLog());
+
 
         return new DefaultShader(renderable, config, program);
     }
@@ -786,7 +788,10 @@ public class DefaultShader : BaseShader
 
     public void init()
     {
+		ShaderProgram program = this.program;
+        this.program = null;
         super.init(program, renderable);
+        renderable = null;
     }
 
     public override void begin(Camera camera, RenderContext context)
@@ -847,8 +852,7 @@ public class DefaultShader : BaseShader
     {
         ulong renderableMask = combineAttributeMasks(renderable);
         return (attributesMask == (renderableMask | optionalAttributes))
-            && (vertexMask == renderable.meshPart.mesh.getVertexAttributes()
-                    .getMaskWithSizePacked()) /*&& (renderable.environment != null) == lighting*/
+            && (vertexMask == renderable.meshPart.mesh.getVertexAttributes().getMaskWithSizePacked()) /*&& (renderable.environment != null) == lighting*/
             ;
     }
 

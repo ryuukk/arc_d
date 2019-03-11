@@ -860,7 +860,7 @@ public class InputEventQueue : IInputProcessor
                 i++;
                 break;
             default:
-                throw new Exception("yo");
+                throw new Exception(format("Unknow input type: %s", type));
             }
         }
         return -1;

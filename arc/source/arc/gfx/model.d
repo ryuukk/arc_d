@@ -2,6 +2,7 @@ module arc.gfx.model;
 
 import std.container;
 import std.stdio;
+import std.format;
 
 import arc.pool;
 import arc.math;
@@ -132,6 +133,8 @@ public class ModelInstance : IRenderableProvider
 
     private void invalidate(Node node)
     {
+        import std.algorithm: canFind;
+
         for (int i = 0, n = cast(int)node.parts.length; i < n; ++i)
         {
 	        NodePart part = node.parts[i];
@@ -142,6 +145,11 @@ public class ModelInstance : IRenderableProvider
 				}
 			}
             // todo: finish
+            if (!materials.canFind(part.material))
+            {
+                //int midx = 
+            }
+
 			//if (!materials.contains(part.material, true)) {
 			//	final int midx = materials.indexOf(part.material, false);
 			//	if (midx < 0)
@@ -149,6 +157,11 @@ public class ModelInstance : IRenderableProvider
 			//	else
 			//		part.material = materials.get(midx);
 			//}
+
+            foreach(Node child; node.children)
+            {
+                invalidate(child);
+            }
         }
     }
 
@@ -173,9 +186,8 @@ public class ModelInstance : IRenderableProvider
 
     public void getRenderables(ref Array!Renderable renderables, Pool!Renderable pool)
     {
-        for (int i = 0; i < nodes.length; i++)
+        foreach(Node node; nodes)
         {
-            Node node = nodes[i];
             getRenderables(node, renderables, pool);
         }
     }
@@ -184,19 +196,18 @@ public class ModelInstance : IRenderableProvider
     {
         if (node.parts.length > 0)
         {
-            for (int i = 0; i < node.parts.length; i++)
+            foreach(NodePart nodePart; node.parts)
             {
-                NodePart nodePart = node.parts[i];
-
                 if (nodePart.enabled)
-                    renderables.insert(getRenderable(pool.obtain(), node, nodePart));
-
+                {
+                    auto renderable = pool.obtain();
+                    renderables.insert(getRenderable(renderable, node, nodePart));
+                }
             }
         }
 
-        for (int i = 0; i < node.children.length; i++)
+        foreach(Node child; node.children)
         {
-            Node child = node.children[i];
             getRenderables(child, renderables, pool);
         }
     }
@@ -215,6 +226,7 @@ public class ModelInstance : IRenderableProvider
 
 public class Model
 {
+    public string id;
     public Material[] materials;
     public Node[] nodes;
     public Animation[] animations;
@@ -223,6 +235,7 @@ public class Model
 
     public void load(ModelData data)
     {
+        id = data.id;
         loadMeshes(data.meshes);
         loadMaterials(data.materials /*, contentManager */ );
         loadNodes(data.nodes);
@@ -323,7 +336,7 @@ public class Model
                 Mat4 v = e.value.values[i];
                 Node node = getNode(nodes, k);
 
-                if(node is null) throw new Exception("yo");
+                if(node is null) throw new Exception(format("can't find node with id: %s", k));
                 
                 e.key.invBoneBindTransforms.put(node, Mat4.inv(v));
             }

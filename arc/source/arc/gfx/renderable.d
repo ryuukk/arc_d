@@ -11,11 +11,16 @@ import arc.gfx.shader;
 public class Renderable
 {
     public Mat4 worldTransform;
-    public MeshPart meshPart = new MeshPart;
+    public MeshPart meshPart;
     public Material material;
     public Environment environment;
     public Mat4[] bones;
     public IShader shader;
+
+    public this()
+    {
+        meshPart = new MeshPart;
+    }
 
     public Renderable set(Renderable renderable)
     {
@@ -31,5 +36,5 @@ public class Renderable
 
 public interface IRenderableProvider
 {
-    void getRenderables(ref Array!Renderable, Pool!Renderable pool);
+    void getRenderables(ref Array!Renderable renderables, Pool!Renderable pool);
 }
