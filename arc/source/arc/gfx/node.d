@@ -28,10 +28,6 @@ public class Node
     public Node parent;
     public Node[] children;
 
-    public this()
-    {
-    }
-
     public void calculateLocalTransform()
     {
         if (!isAnimated)
@@ -91,11 +87,17 @@ public class Node
 
     public void detach()
     {
+		if (parent !is null) {
+			parent.removeChild(this);
+			parent = null;
+		}
     }
 
     public Node copy()
     {
-        return new Node().set(this);
+        Node node = new Node();
+        node.set(this);
+        return node;
     }
 
     public Node set(Node other)

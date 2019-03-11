@@ -250,7 +250,12 @@ public class VertexBuffer
     {
         _isDirty = true;
 
-        _vertices = vertices[offset .. offset + count];
+        //_vertices = vertices[offset .. offset + count];
+
+        _vertices.length = count;
+        for(int i = 0; i < count; i++)
+            _vertices[i] = vertices[offset + i];
+
         bufferChanged();
     }
 
@@ -410,8 +415,14 @@ public class IndexBuffer
     public void setIndices(short[] indices, int offset, int count)
     {
         _isDirty = true;
+
+        //_buffer = indices[offset .. offset + count];
+
         _buffer.length = count;
-        _buffer = indices[offset .. offset + count];
+        for(int i = 0; i < count; i++)
+            _buffer[i] = indices[offset + i];
+
+
         if (_isBound)
         {
             glBufferData(GL_ELEMENT_ARRAY_BUFFER, _buffer.length * 2, _buffer.ptr, _usage);
@@ -464,7 +475,7 @@ public class IndexBuffer
         return _buffer.ptr;
     }
 
-    short[] getBuffer()
+    ref short[] getBuffer()
     {
         return _buffer;
     }

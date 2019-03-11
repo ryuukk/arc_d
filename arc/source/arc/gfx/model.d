@@ -44,7 +44,11 @@ public class ModelInstance : IRenderableProvider
         for (int i = 0; i < model.nodes.length; i++)
         {
             Node node = model.nodes[i];
-            nodes[i] = node.copy();
+
+            Node copy = new Node;
+            copy.set(node);
+            
+            nodes[i] = copy;
         }
 
         invalidate();
@@ -140,7 +144,8 @@ public class ModelInstance : IRenderableProvider
 	        NodePart part = node.parts[i];
 			auto bindPose = part.invBoneBindTransforms;
 			if (bindPose !is null) {
-				for (int j = 0; j < bindPose.size; ++j) {
+				for (int j = 0; j < bindPose.size; ++j) 
+                {
 					bindPose.keys[j] = getNode(nodes, bindPose.keys[j].id);
 				}
 			}
@@ -233,12 +238,14 @@ public class Model
     public Mesh[] meshes;
     public MeshPart[] meshParts;
 
+    ArrayMap!(string, Mat4)[NodePart] nodePartBones;
+
     public void load(ModelData data)
     {
         id = data.id;
         loadMeshes(data.meshes);
         loadMaterials(data.materials /*, contentManager */ );
-        loadNodes(data.nodes);
+        loadNodes(data);
         loadAnimations(data.animations);
         calculateTransforms();
     }
@@ -268,7 +275,8 @@ public class Model
         meshes ~= mesh;
 
         mesh.setVertices(modelMesh.vertices);
-
+        short[] indices;
+        
         int offset = 0;
         meshParts.length = modelMesh.parts.length;
         foreach (i, part; modelMesh.parts)
@@ -281,12 +289,12 @@ public class Model
             meshPart.mesh = mesh;
             if (hasIndices)
             {
-                mesh.setIndices(part.indices);
+               indices ~= part.indices;
             }
             offset += meshPart.size;
             meshParts[i] = meshPart;
         }
-
+        mesh.setIndices(indices);
         foreach (part; meshParts)
             part.update();
     }
@@ -312,15 +320,15 @@ public class Model
         materials ~= result;
     }
 
-    ArrayMap!(string, Mat4)[NodePart] nodePartBones;
 
-    private void loadNodes(ModelNode[] modelNodes)
+    private void loadNodes(ModelData data)
     {
         nodePartBones.clear();
-        nodes.length = modelNodes.length;
-        foreach (i, node; modelNodes)
+        nodes.length = data.nodes.length;
+        foreach (i, node; data.nodes)
+        {
             nodes[i] = loadNode(node);
-
+        }
 
         foreach(e; nodePartBones.byKeyValue())
         {
@@ -348,6 +356,7 @@ public class Model
         Node node = new Node;
         node.id = modelNode.id;
 
+
         node.translation = modelNode.translation;
         node.rotation = modelNode.rotation;
         node.scale = modelNode.scale;
@@ -365,8 +374,11 @@ public class Model
                 {
                     foreach (part; meshParts)
                     {
-                        meshPart = part;
-                        break;
+                        if(modelNodePart.meshPartId == part.id)
+                        {
+                            meshPart = part;
+                            break;
+                        }
                     }
                 }
 
@@ -374,8 +386,11 @@ public class Model
                 {
                     foreach (material; materials)
                     {
-                        meshMaterial = material;
-                        break;
+                        if(modelNodePart.materialId == material.id)
+                        {
+                            meshMaterial = material;
+                            break;
+                        }
                     }
                 }
 
