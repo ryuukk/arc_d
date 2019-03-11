@@ -26,8 +26,6 @@ extern (C) void onFrameBufferResize(GLFWwindow* window, int width, int height) n
 		glViewport(0, 0, width, height);
 
 		Core.graphics.getApp().resize(width, height);
-		Core.graphics.getApp().update(Core.graphics.deltaTime);
-		Core.graphics.getApp().render(Core.graphics.deltaTime);
 
 		glfwSwapBuffers(window);
 	}
