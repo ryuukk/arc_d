@@ -9,6 +9,7 @@ import arc.core;
 import arc.engine;
 import arc.math;
 import arc.gfx.shader;
+import arc.gfx.shader_provider;
 import arc.gfx.camera;
 import arc.gfx.model;
 import arc.gfx.modelloader;
@@ -30,7 +31,7 @@ public class MyGame : IApp
         _cam = new PerspectiveCamera(67, Core.graphics.getWidth(), Core.graphics.getHeight());
         _cam.near = 1f;
         _cam.far = 100f;
-        _cam.position = Vec3(0, 10, 5);
+        _cam.position = Vec3(0, 10, 5) * 5.0f;
         _cam.lookAt(0, 0, 0);
         _cam.update();
 
@@ -62,9 +63,10 @@ public class MyGame : IApp
 
         _batch.begin(_cam);
 
-        for(int x = -2; x < 3; x++)
+        int s = 8;
+        for(int x = -s; x < s; x++)
         {
-            for(int y = -2; y < 3; y++)
+            for(int y = -s; y < s; y++)
             {
                 _modelInstance.transform.set(Vec3(x*2, 0, y*2), Quat.fromAxis(0, 1, 0, _a));
                 _batch.render(_modelInstance);
