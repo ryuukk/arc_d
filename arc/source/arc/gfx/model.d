@@ -13,6 +13,7 @@ import arc.gfx.node;
 import arc.gfx.material;
 import arc.gfx.animation;
 import arc.gfx.mesh;
+import arc.gfx.mesh_part;
 import arc.gfx.buffers;
 import arc.gfx.node;
 import arc.gfx.renderable;

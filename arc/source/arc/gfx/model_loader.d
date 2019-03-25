@@ -66,29 +66,55 @@ private void parseAnimations(ModelData model, JSONValue json)
                 // For backwards compatibility (version 0.1):
                 JSONValue[] keyframes = node["keyframes"].array;
 
-                nodeAnim.translation.length = keyframes.length;
-                nodeAnim.rotation.length = keyframes.length;
-                nodeAnim.scaling.length = keyframes.length;
+                //nodeAnim.translation.length = keyframes.length;
+                //nodeAnim.rotation.length = keyframes.length;
+                //nodeAnim.scaling.length = keyframes.length;
 
                 foreach (k, JSONValue keyframe; keyframes)
                 {
                     float keytime = keyframe["keytime"].floating / 1000f;
 
-                    JSONValue translation = keyframe["translation"];
-                    JSONValue rotation = keyframe["rotation"];
-                    JSONValue scale = keyframe["scale"];
+                    if( "translation" in keyframe )
+                    {
+                        auto kf = new ModelNodeKeyframe!Vec3;
+                        kf.keytime = keytime;
+                        kf.value = readVec3(keyframe["translation"]);
+                        nodeAnim.translation ~= kf;
+                    }
+                    else
+                    {
+                        //nodeAnim.translation[k] = new ModelNodeKeyframe!Vec3;
+                        //nodeAnim.translation[k].keytime = keytime;
+                        //nodeAnim.translation[k].value = Vec3(0,0,0);
+                    }
 
-                    nodeAnim.translation[k] = new ModelNodeKeyframe!Vec3;
-                    nodeAnim.translation[k].keytime = keytime;
-                    nodeAnim.translation[k].value = readVec3(translation);
+                    if( "rotation" in keyframe )
+                    {
+                        auto kf = new ModelNodeKeyframe!Quat;
+                        kf.keytime = keytime;
+                        kf.value = readQuat(keyframe["rotation"]);
+                        nodeAnim.rotation ~= kf;
+                    }
+                    else
+                    {
+                        //nodeAnim.rotation[k] = new ModelNodeKeyframe!Quat;
+                        //nodeAnim.rotation[k].keytime = keytime;
+                        //nodeAnim.rotation[k].value = Quat.identity();
+                    }
 
-                    nodeAnim.rotation[k] = new ModelNodeKeyframe!Quat;
-                    nodeAnim.rotation[k].keytime = keytime;
-                    nodeAnim.rotation[k].value = readQuat(rotation);
-
-                    nodeAnim.scaling[k] = new ModelNodeKeyframe!Vec3;
-                    nodeAnim.scaling[k].keytime = keytime;
-                    nodeAnim.scaling[k].value = readVec3(scale);
+                    if( "scale" in keyframe )
+                    {
+                        auto kf = new ModelNodeKeyframe!Vec3;
+                        kf.keytime = keytime;
+                        kf.value = readVec3(keyframe["scale"]);
+                        nodeAnim.scaling ~= kf;
+                    }
+                    else
+                    {
+                        //nodeAnim.scaling[k] = new ModelNodeKeyframe!Vec3;
+                        //nodeAnim.scaling[k].keytime = keytime;
+                        //nodeAnim.scaling[k].value = Vec3(1,1,1);
+                    }
                 }
             }
         }

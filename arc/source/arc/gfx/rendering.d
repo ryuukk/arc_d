@@ -10,6 +10,7 @@ import arc.gfx.texture;
 import arc.gfx.renderable;
 import arc.gfx.camera;
 import arc.gfx.shader;
+import arc.gfx.shader_provider;
 
 public class RenderContext
 {

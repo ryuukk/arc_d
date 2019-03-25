@@ -2,11 +2,13 @@ module arc.gfx.node;
 
 import std.stdio;
 import std.algorithm;
+import std.typecons;
 
 import arc.math;
 import arc.collections.arraymap;
 import arc.gfx.node;
 import arc.gfx.mesh;
+import arc.gfx.mesh_part;
 import arc.gfx.material;
 import arc.gfx.renderable;
 
@@ -198,6 +200,7 @@ public class NodePart
     public MeshPart meshPart;
     public Material material;
     public ArrayMap!(Node, Mat4) invBoneBindTransforms;
+    public Tuple!(Node, Mat4)[] invBoneBindTransforms2;
     public Mat4[] bones;
     public bool enabled = true;
 
@@ -248,6 +251,24 @@ public class NodePart
                 }
             }
         }
+
+        // todo: use new implementation with array+tuple
+        //if(other.invBoneBindTransforms2.length == 0)
+        //{
+        //    invBoneBindTransforms2.length = 0;
+        //    bones.length = 0;
+        //}
+        //else
+        //{
+        //    invBoneBindTransforms2.length = other.invBoneBindTransforms2.length;
+        //    bones.length = invBoneBindTransforms2.length;
+        //    foreach(i, i; other.invBoneBindTransforms2)
+        //    {
+        //        invBoneBindTransforms2[i] = i;
+        //        bones[i] = Mat4.identity;
+        //    }
+        //}
+
         return this;
     }
 }

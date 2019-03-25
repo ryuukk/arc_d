@@ -5,7 +5,7 @@ import std.container;
 import arc.pool;
 import arc.math;
 import arc.gfx.material;
-import arc.gfx.mesh;
+import arc.gfx.mesh_part;
 import arc.gfx.shader;
 
 public class Renderable

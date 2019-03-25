@@ -184,9 +184,9 @@ public class ShaderProgram
             _attributeSizes[name] = size;
             _attributeNames[i] = name;
             
-            version(DEBUG_SHADER)
+            //version(DEBUG_SHADER)
             {
-                writeln("ATTRIBUTE: ", name);
+                writefln("ATTRIBUTE: %s loc: %s type: %s size: %s", name, location, type, size);
             }
         }
     }
@@ -213,7 +213,7 @@ public class ShaderProgram
             _uniformSizes[name] = size;
             _uniformNames[i] = name;
 
-            version(DEBUG_SHADER)
+            //version(DEBUG_SHADER)
             {
                 writeln("UNIFORM: ", name);
             }
@@ -237,7 +237,7 @@ public class ShaderProgram
     {
         if (_invalidated)
         {
-            version(DEBUG_SHADER)
+            //version(DEBUG_SHADER)
             {
                 writeln("Recompile shader");
             }
@@ -308,7 +308,7 @@ public class ShaderProgram
             {
                 writeln(format("Uniform not cached yet: %s", name));
             }
-
+            
             location = glGetUniformLocation(_program, name.ptr);
             if (location == -1 && pedantic)
                 throw new Exception(format("no uniform with name '%s' in shader", name));
@@ -593,76 +593,6 @@ public abstract class BaseShader : IShader
     }
 }
 
-public interface IShaderProvider
-{
-    IShader getShader(Renderable renderable);
-}
-
-public abstract class BaseShaderProvider : IShaderProvider
-{
-    private IShader[] shaders;
-
-    public IShader getShader(Renderable renderable)
-    {
-        IShader suggestedShader = renderable.shader;
-        if (suggestedShader !is null && suggestedShader.canRender(renderable))
-            return suggestedShader;
-        for (int i = 0; i < shaders.length; i++)
-        {
-            IShader shader = shaders[i];
-            if (shader.canRender(renderable))
-                return shader;
-        }
-        IShader shader = createShader(renderable);
-        shader.init();
-        shaders ~= shader;
-        return shader;
-    }
-
-    protected abstract IShader createShader(Renderable renderable);
-}
-
-public class DefaultShaderProvider : BaseShaderProvider
-{
-    public DefaultShader.Config config;
-
-    public this(string vertexShader, string fragmentShader)
-    {
-        config = DefaultShader.Config(vertexShader, fragmentShader);
-    }
-
-    public override IShader createShader(Renderable renderable)
-    {
-        string vs = "#version 330\n";
-        string fs = "#version 330\n";
-
-        string prefix = DefaultShader.createPrefix(renderable, config);
-
-        vs ~= prefix;
-        fs ~= prefix;
-
-        vs ~= config.vertexShader;
-        fs ~= config.fragmentShader;
-
-        version(DEBUG_SHADER_REFIX)
-        {
-            writeln("Needed compile new shader..");
-            writeln("---");
-
-            writeln("PREFIX:");
-            writeln(prefix);
-
-            writeln("---");
-        }
-
-        ShaderProgram program = new ShaderProgram(vs, fs);
-        assert(program.isCompiled(), program.getLog());
-
-
-        return new DefaultShader(renderable, config, program);
-    }
-}
-
 public class DefaultShader : BaseShader
 {
     public struct Config
@@ -672,7 +602,7 @@ public class DefaultShader : BaseShader
         public int numDirectionalLights = 2;
         public int numPointLights = 5;
         public int numSpotLights = 0;
-        public int numBones = 12;
+        public int numBones = 20;
         public bool ignoreUnimplemented = true;
         public int defaultCullFace = -1;
         public int defaultDepthFunc = -1;
