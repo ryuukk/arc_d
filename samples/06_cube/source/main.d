@@ -134,7 +134,7 @@ public class MyGame : IApp
         _shader.setUniformMat4("u_proj", _cam.projection);
         _shader.setUniformMat4("u_view", _cam.view);
         _shader.setUniformMat4("u_world", _cubeTransform);
-
+        
         _mesh.render(_shader, GL_TRIANGLES);
 
         _shader.end();

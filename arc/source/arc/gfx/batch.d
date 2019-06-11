@@ -7,7 +7,7 @@ import std.format;
 
 import bindbc.opengl;
 
-import arc.gfx.shader;
+import arc.gfx.shader_program;
 import arc.gfx.buffers;
 import arc.gfx.texture;
 import arc.gfx.mesh;

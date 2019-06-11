@@ -5,7 +5,7 @@ import std.format;
 
 import bindbc.opengl;
 
-import arc.gfx.shader;
+import arc.gfx.shader_program;
 
 public class Usage
 {

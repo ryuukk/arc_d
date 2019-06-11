@@ -83,7 +83,7 @@ public class BaseAnimationController
 {
     public static Transform[Node] transforms;
 
-    private bool _applying;
+    private bool _applying = false;
     public ModelInstance target;
 
     public this(ModelInstance target)
@@ -144,7 +144,7 @@ public class BaseAnimationController
     }
       
 
-    private static int getFirstKeyframeIndexAtTime(T)(ref NodeKeyframe!T[] arr, float time)
+    final private static int getFirstKeyframeIndexAtTime(T)(ref NodeKeyframe!T[] arr, float time)
     {
         int n = cast(int) arr.length - 1;
         for (int i = 0; i < n; i++)
@@ -157,7 +157,7 @@ public class BaseAnimationController
         return 0;
     }
 
-    private static Vec3 getTranslationAtTime(NodeAnimation nodeAnim, float time)
+    final private static Vec3 getTranslationAtTime(NodeAnimation nodeAnim, float time)
     {
         if (nodeAnim.translation.length == 0)
             return nodeAnim.node.translation;
@@ -175,12 +175,12 @@ public class BaseAnimationController
             float t = (time - firstKeyframe.keytime) / (
                     secondKeyframe.keytime - firstKeyframe.keytime);
             //result = Vec3.lerp(result, secondKeyframe.value, t);
-            result = secondKeyframe.value;
+            //result = secondKeyframe.value;
         }
         return result;
     }
 
-    private static Quat getRotationAtTime(NodeAnimation nodeAnim, float time)
+    final private static Quat getRotationAtTime(NodeAnimation nodeAnim, float time)
     {
 
         if (nodeAnim.rotation.length == 0)
@@ -198,12 +198,12 @@ public class BaseAnimationController
             auto secondKeyframe = nodeAnim.rotation[index];
             float t = (time - firstKeyframe.keytime) / (secondKeyframe.keytime - firstKeyframe.keytime);
             //result = Quat.slerp(result, secondKeyframe.value, t);
-            result = secondKeyframe.value;
+            //result = secondKeyframe.value;
         }
         return result;
     }
 
-    private static Vec3 getScalingAtTime(NodeAnimation nodeAnim, float time)
+    final private static Vec3 getScalingAtTime(NodeAnimation nodeAnim, float time)
     {
 
         if (nodeAnim.scaling.length == 0)
@@ -222,12 +222,12 @@ public class BaseAnimationController
             float t = (time - firstKeyframe.keytime) / (
                     secondKeyframe.keytime - firstKeyframe.keytime);
             //result = Vec3.lerp(result, secondKeyframe.value, t);
-            result = secondKeyframe.value;
+            //result = secondKeyframe.value;
         }
         return result;
     }
 
-    private static Transform getNodeAnimationTransform(NodeAnimation nodeAnim, float time)
+    final private static Transform getNodeAnimationTransform(NodeAnimation nodeAnim, float time)
     {
         // todo: finish implement interpolation
         Transform transform = Transform().idt();

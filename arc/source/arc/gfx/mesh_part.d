@@ -1,7 +1,7 @@
 module arc.gfx.mesh_part;
 
 import arc.math;
-import arc.gfx.shader;
+import arc.gfx.shader_program;
 import arc.gfx.mesh;
 
 public class MeshPart

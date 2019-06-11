@@ -3,6 +3,7 @@ module arc.gfx.model;
 import std.container;
 import std.stdio;
 import std.format;
+import std.typecons;
 
 import arc.pool;
 import arc.math;
@@ -34,6 +35,10 @@ public class ModelInstance : IRenderableProvider
     {
         this.model = model;
         copyNodes(this.model);
+
+
+
+        invalidate();
         copyAnimations(this.model);
         calculateTransforms();
     }
@@ -44,15 +49,11 @@ public class ModelInstance : IRenderableProvider
 
         for (int i = 0; i < model.nodes.length; i++)
         {
-            Node node = model.nodes[i];
-
-            Node copy = new Node;
+            auto node = model.nodes[i];
+            auto copy = new Node;
             copy.set(node);
-            
             nodes[i] = copy;
         }
-
-        invalidate();
     }
 
     private void copyAnimations(Model model)
@@ -145,9 +146,17 @@ public class ModelInstance : IRenderableProvider
 	        NodePart part = node.parts[i];
 			auto bindPose = part.invBoneBindTransforms;
 			if (bindPose !is null) {
-				for (int j = 0; j < bindPose.size; ++j) 
+				for (int j = 0; j < bindPose.length; ++j) 
                 {
-					bindPose.keys[j] = getNode(nodes, bindPose.keys[j].id);
+                    auto bpN = bindPose[j].node;
+                    auto bpNID = bindPose[j].node.id;
+                    
+                    auto bone = getNode(nodes, bindPose[j].node.id);
+
+                    if(bone is null)
+                        writeln("Bone is null");
+
+					bindPose[j].node = bone;
 				}
 			}
             // todo: finish
@@ -230,6 +239,12 @@ public class ModelInstance : IRenderableProvider
     }
 }
 
+public struct BoneId
+{
+    public string id;
+    public Mat4 transform;
+}
+
 public class Model
 {
     public string id;
@@ -239,7 +254,7 @@ public class Model
     public Mesh[] meshes;
     public MeshPart[] meshParts;
 
-    ArrayMap!(string, Mat4)[NodePart] nodePartBones;
+    Tuple!(string, Mat4)[][NodePart] nodePartBones;
 
     public void load(ModelData data)
     {
@@ -266,10 +281,11 @@ public class Model
         {
             numIndices += modelMesh.parts[i].indices.length;
         }
+        
 
         bool hasIndices = numIndices > 0;
 
-        VertexAttributes attributes = new VertexAttributes(modelMesh.attributes);
+        auto attributes = new VertexAttributes(modelMesh.attributes);
         int numVertices = cast(int) modelMesh.vertices.length / (attributes.vertexSize / 4);
 
         Mesh mesh = new Mesh(true, numVertices, numIndices, attributes);
@@ -295,6 +311,8 @@ public class Model
             offset += meshPart.size;
             meshParts[i] = meshPart;
         }
+
+        writeln("Indices: ", indices.length);
         mesh.setIndices(indices);
         foreach (part; meshParts)
             part.update();
@@ -333,21 +351,15 @@ public class Model
 
         foreach(e; nodePartBones.byKeyValue())
         {
-            if(e.key.invBoneBindTransforms is null)
-                e.key.invBoneBindTransforms = new ArrayMap!(Node, Mat4);
+            e.key.invBoneBindTransforms.length = e.value.length;
 
-            e.key.invBoneBindTransforms.clear();
-            e.key.invBoneBindTransforms.resize(e.value.size);
-
-            for(int i = 0; i < e.value.size; i++)
+            for(int i = 0; i < e.value.length; i++)
             {
-                string k = e.value.keys[i];
-                Mat4 v = e.value.values[i];
-                Node node = getNode(nodes, k);
-
-                if(node is null) throw new Exception(format("can't find node with id: %s", k));
-                
-                e.key.invBoneBindTransforms.put(node, Mat4.inv(v));
+                auto pair = e.value[i];
+                auto node = getNode(nodes, pair[0]);
+                auto invTransform = Mat4.inv(pair[1]);
+                e.key.invBoneBindTransforms[i].node = node;
+                e.key.invBoneBindTransforms[i].transform = invTransform;
             }
         }
     }
@@ -356,8 +368,6 @@ public class Model
     {
         Node node = new Node;
         node.id = modelNode.id;
-
-
         node.translation = modelNode.translation;
         node.rotation = modelNode.rotation;
         node.scale = modelNode.scale;

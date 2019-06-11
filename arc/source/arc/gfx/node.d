@@ -65,15 +65,15 @@ public class Node
         foreach (NodePart part; parts)
         {
             if (part.invBoneBindTransforms is null || part.bones.length == 0
-                    || part.invBoneBindTransforms.size != part.bones.length)
+                    || part.invBoneBindTransforms.length != part.bones.length)
             {
                 continue;
             }
-            int n = part.invBoneBindTransforms.size;
+            auto n = part.invBoneBindTransforms.length;
             for (int i = 0; i < n; i++)
             {
-                Mat4 globalTransform = part.invBoneBindTransforms.keys[i].globalTransform;
-                Mat4 invTransform = part.invBoneBindTransforms.values[i];
+                Mat4 globalTransform = part.invBoneBindTransforms[i].node.globalTransform;
+                Mat4 invTransform = part.invBoneBindTransforms[i].transform;
                 part.bones[i] = globalTransform * invTransform;
             }
         }
@@ -115,7 +115,6 @@ public class Node
         globalTransform = other.globalTransform;
 
         parts.length = other.parts.length;
-
         foreach (i, NodePart nodePart; other.parts)
         {
             parts[i] = nodePart.copy();
@@ -195,12 +194,17 @@ Node getNode(ref Node[] nodes, string id, bool recursive = true, bool ignoreCase
     return null;
 }
 
+public struct InvBoneTransform
+{
+    public Node node;
+    public Mat4 transform;
+}
+
 public class NodePart
 {
     public MeshPart meshPart;
     public Material material;
-    public ArrayMap!(Node, Mat4) invBoneBindTransforms;
-    public Tuple!(Node, Mat4)[] invBoneBindTransforms2;
+    public InvBoneTransform[] invBoneBindTransforms;
     public Mat4[] bones;
     public bool enabled = true;
 
@@ -218,7 +222,9 @@ public class NodePart
 
     public NodePart copy()
     {
-        return new NodePart().set(this);
+        auto ret = new NodePart();
+        ret.set(this);
+        return ret;
     }
 
     public NodePart set(NodePart other)
@@ -227,47 +233,25 @@ public class NodePart
         material = other.material;
         enabled = other.enabled;
 
-        if (other.invBoneBindTransforms is null)
+        if(other.invBoneBindTransforms.length > 0)
         {
-            invBoneBindTransforms = null;
-            bones.length = 0;
-        }
-        else
-        {
-            if (invBoneBindTransforms is null)
-                invBoneBindTransforms = new ArrayMap!(Node, Mat4)(true,
-                        other.invBoneBindTransforms.size);
-            else
-                invBoneBindTransforms.clear();
-
-            invBoneBindTransforms.putAll(other.invBoneBindTransforms);
-
-            if (bones.length == 0 || bones.length != invBoneBindTransforms.size)
+            invBoneBindTransforms.length = other.invBoneBindTransforms.length;
+            bones.length = other.invBoneBindTransforms.length;
+            for(int i = 0; i < other.invBoneBindTransforms.length; ++i)
             {
-                bones.length = invBoneBindTransforms.size;
-                for (int i = 0; i < bones.length; i++)
-                {
-                    bones[i] = Mat4.identity;
-                }
+                auto entry = other.invBoneBindTransforms[i];
+                if(entry.node is null)
+                    writeln("wtf bro");
+
+                invBoneBindTransforms[i] = InvBoneTransform();
+                invBoneBindTransforms[i].node = entry.node;
+                invBoneBindTransforms[i].transform = entry.transform;
+            }
+
+            for (auto j = 0; j < bones.length; ++j) {
+                bones[j] = Mat4.identity;
             }
         }
-
-        // todo: use new implementation with array+tuple
-        //if(other.invBoneBindTransforms2.length == 0)
-        //{
-        //    invBoneBindTransforms2.length = 0;
-        //    bones.length = 0;
-        //}
-        //else
-        //{
-        //    invBoneBindTransforms2.length = other.invBoneBindTransforms2.length;
-        //    bones.length = invBoneBindTransforms2.length;
-        //    foreach(i, i; other.invBoneBindTransforms2)
-        //    {
-        //        invBoneBindTransforms2[i] = i;
-        //        bones[i] = Mat4.identity;
-        //    }
-        //}
 
         return this;
     }

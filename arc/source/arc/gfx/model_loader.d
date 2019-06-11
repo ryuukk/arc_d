@@ -3,6 +3,7 @@ module arc.gfx.modelloader;
 import std.json;
 import std.stdio;
 import std.container;
+import std.typecons;
 
 import arc.pool;
 import arc.math;
@@ -81,12 +82,6 @@ private void parseAnimations(ModelData model, JSONValue json)
                         kf.value = readVec3(keyframe["translation"]);
                         nodeAnim.translation ~= kf;
                     }
-                    else
-                    {
-                        //nodeAnim.translation[k] = new ModelNodeKeyframe!Vec3;
-                        //nodeAnim.translation[k].keytime = keytime;
-                        //nodeAnim.translation[k].value = Vec3(0,0,0);
-                    }
 
                     if( "rotation" in keyframe )
                     {
@@ -95,12 +90,6 @@ private void parseAnimations(ModelData model, JSONValue json)
                         kf.value = readQuat(keyframe["rotation"]);
                         nodeAnim.rotation ~= kf;
                     }
-                    else
-                    {
-                        //nodeAnim.rotation[k] = new ModelNodeKeyframe!Quat;
-                        //nodeAnim.rotation[k].keytime = keytime;
-                        //nodeAnim.rotation[k].value = Quat.identity();
-                    }
 
                     if( "scale" in keyframe )
                     {
@@ -108,12 +97,6 @@ private void parseAnimations(ModelData model, JSONValue json)
                         kf.keytime = keytime;
                         kf.value = readVec3(keyframe["scale"]);
                         nodeAnim.scaling ~= kf;
-                    }
-                    else
-                    {
-                        //nodeAnim.scaling[k] = new ModelNodeKeyframe!Vec3;
-                        //nodeAnim.scaling[k].keytime = keytime;
-                        //nodeAnim.scaling[k].value = Vec3(1,1,1);
                     }
                 }
             }
@@ -242,8 +225,8 @@ private ModelNode parseNodesRecursively(JSONValue json)
             if ("bones" in material)
             {
                 JSONValue[] bones = material["bones"].array;
-                nodePart.bones = new ArrayMap!(string, Mat4);
-                nodePart.bones.resize(cast(int) bones.length);
+                nodePart.bones.length = bones.length;
+                nodePart.bones.reserve(cast(int) bones.length);
                 foreach (j, JSONValue bone; bones)
                 {
                     string nodeId = bone["node"].str;
@@ -259,7 +242,7 @@ private ModelNode parseNodesRecursively(JSONValue json)
                             rotation[2].floating, rotation[3].floating,
                             scale[0].floating, scale[1].floating, scale[2].floating);
 
-                    nodePart.bones.put(nodeId, transform);
+                    nodePart.bones[j] = tuple(nodeId, transform);
                 }
             }
 
@@ -503,7 +486,7 @@ public class ModelNodePart
 {
     public string materialId;
     public string meshPartId;
-    public ArrayMap!(string, Mat4) bones;
+    public Tuple!(string, Mat4)[] bones;
     public int[][] uvMapping;
 }
 

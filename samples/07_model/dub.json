@@ -13,9 +13,9 @@
 	"workingDirectory": "../../bin",
 
 	"dependencies": {
-		"bindbc-opengl": "~>0.1.0",
-		"bindbc-glfw": "~>0.1.0",
-		"bindbc-openal": "~>0.1.0",
+		"bindbc-opengl": "~>0.9.0",
+		"bindbc-glfw": "~>0.6.0",
+		"bindbc-openal": "~>0.3.0",
 		"stb": "~>1.7.5",
 		"arc_d:arc": {"path":"../../arc", "version": "~master"}
 	},

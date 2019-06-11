@@ -1,6 +1,7 @@
 module arc.gfx.shader_provider;
 
 import arc.gfx.shader;
+import arc.gfx.shader_program;
 import arc.gfx.renderable;
 
 

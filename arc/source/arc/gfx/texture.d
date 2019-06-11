@@ -2,10 +2,12 @@ module arc.gfx.texture;
 
 import std.stdio;
 import std.format;
+import std.math;
 
 import bindbc.opengl;
 import bindbc.opengl.gl;
 import stb.image;
+import arc.math;
 
 public enum TextureFilter
 {
@@ -256,9 +258,9 @@ public class Texture2D : GLTexture
 }
 
 
-public class TextureDescriptor(T)
+public class TextureDescriptor
 {
-    public T texture;
+    public GLTexture texture;
 	public TextureFilter minFilter;
 	public TextureFilter magFilter;
 	public TextureWrap uWrap;
@@ -267,22 +269,39 @@ public class TextureDescriptor(T)
 
 public class TextureBinder
 {
-    public immutable static int ROUNDROBIN = 0;
-    public immutable static int WEIGHTED = 1;
+    public const int ROUNDROBIN = 0;
+    public const int WEIGHTED = 1;
 
-	public immutable static int MAX_UNITS = 32;
+	public const int MAX_UNITS = 32;
 
-    private int offset;
-	private int count;
-	private int reuseWeight;
-	private GLTexture[] textures;
-	private int[] weights;
-	private int method;
-	private bool reused;
+    private int _offset;
+	private int _count;
+	private int _reuseWeight;
+	private GLTexture[] _textures;
+	private int[] _weights;
+	private int _method;
+	private bool _reused;
 
-	private int reuseCount = 0;
-	private int bindCount = 0;
+	private int _reuseCount = 0;
+	private int _bindCount = 0;
 
+    private int _currentTexture = 0;
+
+    this(int method = 0, int offset = 0, int count = -1, int reuseWeight = 10)
+    {        
+        int max = min(getMaxTextureUnits(), MAX_UNITS);
+        if (count < 0) count = max - offset;
+        if (_offset < 0 || _count < 0 || (offset + count) > max || reuseWeight < 1)
+            throw new Exception("Illegal arguments");
+        _method = method;
+        _offset = offset;
+        _count = count;
+        _textures.length = count;
+        _reuseWeight = reuseWeight;
+
+        if(method == WEIGHTED)
+            _weights.length = count;
+    }
     
 	private static int getMaxTextureUnits () {
 		int max;
@@ -292,9 +311,9 @@ public class TextureBinder
 
     public void begin()
     {
-		for (int i = 0; i < count; i++) {
-			textures[i] = null;
-			if (weights !is null) weights[i] = 0;
+		for (int i = 0; i < _count; i++) {
+			_textures[i] = null;
+			if (_weights.length > 0) _weights[i] = 0;
 		}
     }
 
@@ -303,5 +322,93 @@ public class TextureBinder
         glActiveTexture(GL_TEXTURE0);
     }
 
+    public int bind(TextureDescriptor textureDesc)
+    {
+        return bindTexture(textureDesc, true);
+    }
 
+    private int bindTexture(TextureDescriptor textureDesc, bool rebind)
+    {
+        int idx;
+        int result;
+        GLTexture texture = textureDesc.texture;
+        _reused = false;
+
+        switch (_method)
+        {
+        case 0:
+            result = _offset + (idx = bindTextureRoundRobin(texture));
+            break;
+        case 1:
+            result = _offset + (idx = bindTextureWeighted(texture));
+            break;
+        default:
+            return -1;
+        }
+
+        if (_reused)
+        {
+            _reuseCount++;
+            if (rebind)
+                texture.bind(result);
+            else
+                glActiveTexture(GL_TEXTURE0  + result);
+        }
+        else
+            _bindCount++;
+
+        texture.unsafeSetWrap(textureDesc.uWrap, textureDesc.vWrap);
+        texture.unsafeSetFilter(textureDesc.minFilter, textureDesc.magFilter);
+        return result;
+    }
+
+    private int bindTextureRoundRobin(GLTexture texture)
+    {
+        for (int i = 0; i < _count; i++)
+        {
+            int idx = (_currentTexture + i) % _count;
+            if (_textures[idx] == texture)
+            {
+                _reused = true;
+                return idx;
+            }
+        }
+
+        _currentTexture = (_currentTexture + 1) % _count;
+        _textures[_currentTexture] = texture;
+        texture.bind(_offset + _currentTexture);
+
+        return _currentTexture;
+    }
+
+    private int bindTextureWeighted(GLTexture texture)
+    {
+        int result = -1;
+        int weight = _weights[0];
+        int windex = 0;
+        for (int i = 0; i < _count; i++)
+        {
+            if (_textures[i] == texture)
+            {
+                result = i;
+                _weights[i] += _reuseWeight;
+            }
+            else if (_weights[i] < 0 || --_weights[i] < weight)
+            {
+                weight = _weights[i];
+                windex = i;
+            }
+        }
+
+        if (result < 0)
+        {
+            _textures[windex] = texture;
+            _weights[windex] = 100;
+            texture.bind(_offset + (result = windex));
+        }
+        else
+            _reused = true;
+
+        return result;
+    }
 }

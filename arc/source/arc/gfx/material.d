@@ -104,7 +104,7 @@ public class TextureAttribute : Attribute
 
     public static ulong mask;
 
-    public TextureDescriptor!(Texture2D) textureDescriptor;
+    public TextureDescriptor descriptor;
     public float offsetU = 0;
     public float offsetV = 0;
     public float scaleU = 1;
@@ -114,14 +114,14 @@ public class TextureAttribute : Attribute
     public this(ulong type)
     {
         super(type);
-        textureDescriptor = new TextureDescriptor!(Texture2D);
+        descriptor = new TextureDescriptor();
     }
 
     public this(ulong type, Texture2D texture)
     {
         super(type);
-        textureDescriptor = new TextureDescriptor!(Texture2D);
-        textureDescriptor.texture = texture;
+        descriptor = new TextureDescriptor();
+        descriptor.texture = texture;
     }
 
     public static TextureAttribute createDiffuse(Texture2D texture)

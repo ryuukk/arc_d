@@ -12,6 +12,12 @@ public const float PI2 = PI * 2;
 public const float DEG2RAD = PI / 180.0f;
 public const float RAD2DEG = 180.0f / PI;
 
+
+int min(int a, int b)
+{
+    return a >= b ? b : a;
+}
+
 public struct Vec2
 {
     public float x = 0f;
@@ -186,6 +192,34 @@ public struct Mat4
     public static immutable int M32 = 11;
     public static immutable int M33 = 15;
     public float[16] val;
+
+    public void print()
+    {
+        import std.stdio;
+        writeln("----");
+        writeln("----");
+
+        
+            writeln("m00: ", val[M00]);
+            writeln("m10: ", val[M10]);
+            writeln("m20: ", val[M20]);
+            writeln("m30: ", val[M30]);
+            writeln("m01: ", val[M01]);
+            writeln("m11: ", val[M11]);
+            writeln("m21: ", val[M21]);
+            writeln("m31: ", val[M31]);
+            writeln("m02: ", val[M02]);
+            writeln("m12: ", val[M12]);
+            writeln("m22: ", val[M22]);
+            writeln("m32: ", val[M32]);
+            writeln("m03: ", val[M03]);
+            writeln("m13: ", val[M13]);
+            writeln("m23: ", val[M23]);
+            writeln("m33: ", val[M33]);
+
+        writeln("----");
+        writeln("----");
+    }
 
     public this(float m00, float m01, float m02, float m03, float m04, float m05, float m06, float m07, float m08, float m09,
             float m10, float m11, float m12, float m13, float m14, float m15)

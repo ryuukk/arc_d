@@ -1,0 +1,62 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "[D] 01_hello",
+            "type": "shell",
+            "command": "dub run :hello --arch=x86_64 --build=debug"
+        },
+        {
+            "label": "[D] 02_input",
+            "type": "shell",
+            "command": "dub run :input --arch=x86_64 --build=debug"
+        },
+        {
+            "label": "[D] 03_triangle",
+            "type": "shell",
+            "command": "dub run :triangle --arch=x86_64 --build=debug"
+        },
+        {
+            "label": "[D] 04_textured_quad",
+            "type": "shell",
+            "command": "dub run :textured_quad --arch=x86_64 --build=debug"
+        },
+        {
+            "label": "[D] 05_spritebatch",
+            "type": "shell",
+            "command": "dub run :spritebatch --arch=x86_64 --build=debug"
+        },
+        {
+            "label": "[D] 06_cube",
+            "type": "shell",
+            "command": "dub run :cube --arch=x86_64 --build=debug"
+        },
+        {
+            "label": "[D] 07_model",
+            "type": "shell",
+            "command": "dub run :cube --arch=x86_64 --build=debug"
+        },
+        {
+            "label": "[D] 08_renderbatch",
+            "type": "shell",
+            "command": "dub run :renderbatch --arch=x86_64 --build=debug --compiler=dmd"
+        },
+        {
+            "label": "[D] 09_skeletal_animation",
+            "type": "shell",
+            "command": "dub run :skeletal_animation --arch=x86_64 --build=debug --compiler=dmd"
+        },        
+        {
+            "label": "[D] 99_experiments",
+            "type": "shell",
+            "command": "dub run :experiments --arch=x86_64 --build=debug"
+        },
+        {
+            "label": "Build Lib",
+            "type": "shell",
+            "command": "dub build :arc --arch=x86_64 --build=debug -c=ci"
+        },
+    ]
+}

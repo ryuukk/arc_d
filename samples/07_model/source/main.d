@@ -84,7 +84,7 @@ public class MyGame : IApp
         assert(_shader.isCompiled(), _shader.getLog());
 
 
-        auto data = loadModelData("data/tree_small_0.g3dj");
+        auto data = loadModelData("data/character_male_0.g3dj");
         assert(data !is null, "can't parse data");
 
         _model = new Model;
@@ -117,11 +117,9 @@ public class MyGame : IApp
         
         foreach(Mesh mesh; _model.meshes)
         {
-            auto ta = _model.materials[0].get!TextureAttribute(TextureAttribute.diffuse);
-
-            ta.textureDescriptor.texture.bind();
-
-            _shader.setUniformi("u_texture", 0);
+            //auto ta = _model.materials[0].get!TextureAttribute(TextureAttribute.diffuse);
+            //ta.textureDescriptor.texture.bind();
+            //_shader.setUniformi("u_texture", 0);
             
             mesh.render(_shader, GL_TRIANGLES);
         }

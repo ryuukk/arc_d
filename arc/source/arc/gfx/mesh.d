@@ -6,7 +6,7 @@ import std.format;
 import bindbc.opengl;
 
 import arc.math;
-import arc.gfx.shader;
+import arc.gfx.shader_program;
 import arc.gfx.buffers;
 
 public class Mesh
