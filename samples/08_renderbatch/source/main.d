@@ -9,6 +9,7 @@ import bindbc.glfw;
 import arc.core;
 import arc.engine;
 import arc.math;
+import arc.util.camera_controller;
 import arc.gfx.shader;
 import arc.gfx.shader_provider;
 import arc.gfx.camera;
@@ -43,6 +44,7 @@ public class Entity
 
 public class MyGame : IApp
 {
+    CameraController _controller;
     PerspectiveCamera _cam;
     Model _modelA;
     Model _modelB;
@@ -56,9 +58,9 @@ public class MyGame : IApp
         _cam = new PerspectiveCamera(67, Core.graphics.getWidth(), Core.graphics.getHeight());
         _cam.near = 1f;
         _cam.far = 100f;
-        _cam.position = Vec3(0, 10, 5) * 2.5f;
-        _cam.lookAt(0, 0, 0);
         _cam.update();
+
+        _controller = new CameraController(_cam);
 
         auto dataA = loadModelData("data/character_male_0.g3dj");
         assert(dataA !is null, "can't parse dataA");
@@ -108,6 +110,7 @@ public class MyGame : IApp
         }
 
         writeln("Added: ", entities.length," entities");
+        Core.input.setInputProcessor(_controller);
         GC.collect();
     }
 
@@ -115,6 +118,8 @@ public class MyGame : IApp
     {
         foreach(entity; entities)
             entity.update(dt);
+
+        _controller.update(dt);
     }
 
     public void render(float dt)

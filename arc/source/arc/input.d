@@ -261,6 +261,26 @@ public class Input
         }
     }
 
+    public float getX()
+    {
+        return mouseX;
+    }
+
+    public float getY()
+    {
+        return mouseY;
+    }
+
+    public float getDeltaX()
+    {
+        return deltaX;
+    }
+
+    public float getDeltaY()
+    {
+        return deltaY;
+    }
+
     public void setInputProcessor(IInputProcessor processor)
     {
         this.inputProcessor = processor;
@@ -972,7 +992,7 @@ public class InputAdapter : IInputProcessor
 {
     public bool keyDown(int keycode)
     {
-        return true;
+        return false;
     }
 
     public bool keyUp(int keycode)

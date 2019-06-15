@@ -108,9 +108,40 @@ public struct Vec3
             return Vec3(x * other.x, y * other.y, z * other.z);
         else static if (op == "/")
             return Vec3(x / other.x, y / other.y, z / other.z);
+        else static if (op == "+=")
+            return Vec3(x + other.x, y + other.y, z + other.z);
         else
             static assert(0, "Operator " ~ op ~ " not implemented");
     }
+
+    Vec3 opOpAssign(string op)(Vec3 other)
+    {
+        static if(op =="+")
+        {
+            x += other.x;
+            y += other.y;
+            z += other.z;
+        }
+        else static if(op == "-")
+        {
+            x -= other.x;
+            y -= other.y;
+            z -= other.z;
+        }
+        else static if(op == "*")
+        {
+            x *= other.x;
+            y *= other.y;
+            z *= other.z;
+        }
+        else static if(op == "/")
+        {
+            x /= other.x;
+            y /= other.y;
+            z /= other.z;
+        }
+        return this;
+    } 
 
     Vec3 opBinary(string op)(float other)
     {
@@ -138,6 +169,37 @@ public struct Vec3
         v.y = a.y + (b.y - a.y) * amount;
         v.z = a.z + (b.z - a.z) * amount;
         return v;
+    }
+
+    public static float dot(in Vec3 lhs, in Vec3 rhs)
+    {
+        return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
+    }
+
+    public static Vec3 cross(in Vec3 lhs, in Vec3 rhs)
+    {
+        Vec3 res;
+        res.x = lhs.y * rhs.z - lhs.z * rhs.y;
+        res.y = lhs.z * rhs.x - lhs.x * rhs.z;
+        res.z = lhs.x * rhs.y - lhs.y * rhs.x;
+        return res;
+    }
+
+    public static Vec3 rotate(in Vec3 lhs, in Vec3 axis, float angle)
+    {
+        auto rotation = Quat.fromAxis(axis, angle);
+        auto matrix = Mat4.identity; matrix.set(0, 0, 0, rotation.x, rotation.y, rotation.z, rotation.w);
+
+        return transform(lhs, matrix);
+    }
+
+    public static Vec3 transform(in Vec3 lhs, in Mat4 matrix)
+    {
+        Vec3 ret;
+        ret.x = lhs.x * matrix.val[Mat4.M00] + lhs.y * matrix.val[Mat4.M01] + lhs.z * matrix.val[Mat4.M02] + matrix.val[Mat4.M03];
+        ret.y = lhs.x * matrix.val[Mat4.M10] + lhs.y * matrix.val[Mat4.M11] + lhs.z * matrix.val[Mat4.M12] + matrix.val[Mat4.M13];
+        ret.z = lhs.x * matrix.val[Mat4.M20] + lhs.y * matrix.val[Mat4.M21] + lhs.z * matrix.val[Mat4.M22] + matrix.val[Mat4.M23];
+        return ret;
     }
 }
 
@@ -192,6 +254,7 @@ public struct Mat4
     public static immutable int M32 = 11;
     public static immutable int M33 = 15;
     public float[16] val;
+
 
     public void print()
     {
