@@ -7,6 +7,7 @@ import std.typecons;
 import arc.math;
 import arc.collections.arraymap;
 import arc.gfx.node;
+import arc.gfx.node_part;
 import arc.gfx.mesh;
 import arc.gfx.mesh_part;
 import arc.gfx.material;
@@ -16,7 +17,7 @@ public class Node
 {
     public string id;
     public bool inheritTransform = true;
-    public bool isAnimated;
+    public bool isAnimated = false;
 
     public Vec3 translation = Vec3(0, 0, 0);
     public Quat rotation = Quat.identity;
@@ -33,15 +34,13 @@ public class Node
     public void calculateLocalTransform()
     {
         if (!isAnimated)
-            localTransform.idt().set(translation.x, translation.y,
-                    translation.z, rotation.x, rotation.y, rotation.z,
-                    rotation.w, scale.x, scale.y, scale.z);
+            localTransform = Mat4.set(translation, rotation, scale);
     }
 
     public void calculateWorldTransform()
     {
         if (inheritTransform && parent !is null)
-            globalTransform = parent.globalTransform * localTransform;
+            globalTransform = Mat4.mult(parent.globalTransform, localTransform);
         else
             globalTransform = localTransform;
     }
@@ -60,11 +59,9 @@ public class Node
 
     public void calculateBoneTransforms(bool recursive)
     {
-        import std.stdio;
-
         foreach (NodePart part; parts)
         {
-            if (part.invBoneBindTransforms is null || part.bones.length == 0
+            if (part.invBoneBindTransforms.length == 0 || part.bones.length == 0
                     || part.invBoneBindTransforms.length != part.bones.length)
             {
                 continue;
@@ -74,7 +71,7 @@ public class Node
             {
                 Mat4 globalTransform = part.invBoneBindTransforms[i].node.globalTransform;
                 Mat4 invTransform = part.invBoneBindTransforms[i].transform;
-                part.bones[i] = globalTransform * invTransform;
+                part.bones[i] = Mat4.mult(globalTransform, invTransform);
             }
         }
 
@@ -129,18 +126,30 @@ public class Node
 
     public int addChild(Node child)
     {
+        return insertChild(-1, child);
+    }
+
+    public int insertChild(int index, Node child)
+    {
         for (Node p = this; p !is null; p = p.parent)
         {
             if (p == child)
                 throw new Exception("Cannot add a parent as a child");
         }
-        Node p = child.parent;
+         Node p = child.parent;
         if (p !is null && !p.removeChild(child))
             throw new Exception("Could not remove child from its current parent");
-
-        children ~= child;
+        if(index < 0 || index >= children.length)
+        {
+            index = cast(int) children.length;
+            children ~= child;
+        }
+        else
+        {
+            throw new Exception("can't insert at given position, not supported yet");
+        }
         child.parent = this;
-        return cast(int) children.length;
+        return index;
     }
 
     public int indexOf(Node child)
@@ -159,7 +168,7 @@ public class Node
         if (index == -1)
             return false;
 
-        children = children.remove(index, index + 1);
+        children = children.remove(index, 1);
         child.parent = null;
         return true;
     }
@@ -192,67 +201,4 @@ Node getNode(ref Node[] nodes, string id, bool recursive = true, bool ignoreCase
         }
     }
     return null;
-}
-
-public struct InvBoneTransform
-{
-    public Node node;
-    public Mat4 transform;
-}
-
-public class NodePart
-{
-    public MeshPart meshPart;
-    public Material material;
-    public InvBoneTransform[] invBoneBindTransforms;
-    public Mat4[] bones;
-    public bool enabled = true;
-
-    public this()
-    {
-    }
-
-    public Renderable setRenderable(Renderable renderable)
-    {
-        renderable.material = material;
-        renderable.meshPart.set(meshPart);
-        renderable.bones = bones;
-        return renderable;
-    }
-
-    public NodePart copy()
-    {
-        auto ret = new NodePart();
-        ret.set(this);
-        return ret;
-    }
-
-    public NodePart set(NodePart other)
-    {
-        meshPart = new MeshPart(other.meshPart);
-        material = other.material;
-        enabled = other.enabled;
-
-        if(other.invBoneBindTransforms.length > 0)
-        {
-            invBoneBindTransforms.length = other.invBoneBindTransforms.length;
-            bones.length = other.invBoneBindTransforms.length;
-            for(int i = 0; i < other.invBoneBindTransforms.length; ++i)
-            {
-                auto entry = other.invBoneBindTransforms[i];
-                if(entry.node is null)
-                    writeln("wtf bro");
-
-                invBoneBindTransforms[i] = InvBoneTransform();
-                invBoneBindTransforms[i].node = entry.node;
-                invBoneBindTransforms[i].transform = entry.transform;
-            }
-
-            for (auto j = 0; j < bones.length; ++j) {
-                bones[j] = Mat4.identity;
-            }
-        }
-
-        return this;
-    }
 }

@@ -96,7 +96,7 @@ public class TextureAttribute : Attribute
     public immutable static string diffuseAlias = "diffuseTexture";
     public immutable static ulong diffuse;
 
-    static this()
+    shared static this()
     {
         diffuse = register(diffuseAlias);
         mask = diffuse;
@@ -135,7 +135,7 @@ public class IntAttribute : Attribute
     public static immutable string cullFaceAlias = "cullface";
     public static immutable ulong cullFace;
 
-    static this()
+    shared static this()
     {
         cullFace = register(cullFaceAlias);
     }
@@ -159,7 +159,7 @@ public class DepthTestAttribute : Attribute
     public static immutable string aliass = "depthStencil";
     public static immutable ulong type;
 
-    static this()
+    shared static this()
     {
         type = register(aliass);
     }
@@ -195,7 +195,7 @@ public class ColorAttribute : Attribute
 
     protected static ulong mask;
 
-    static this()
+    shared static this()
     {
         diffuse = register(diffuseAlias);
         specular = register(specularAlias);

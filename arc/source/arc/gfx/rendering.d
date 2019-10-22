@@ -11,7 +11,7 @@ import arc.gfx.renderable;
 import arc.gfx.camera;
 import arc.gfx.shader;
 import arc.gfx.shader_provider;
-import arc.gfx.model;
+import arc.gfx.model_instance;
 
 public class RenderContext
 {
@@ -174,7 +174,7 @@ public class RenderableBatch
             renderable.meshPart.set("", null, 0, 0, 0);
             renderable.shader = null;
             renderable.worldTransform = Mat4.identity;
-            renderable.bones.length = 0;
+            renderable.bones = null;
             return renderable;
         }
     }
@@ -245,6 +245,9 @@ public class RenderableBatch
         renderables.insert(renderable);
     }
 
+
+
+/*
     public void render(ModelInstance model)
     {
         int offset = cast(int) renderables.length;
@@ -254,8 +257,9 @@ public class RenderableBatch
             foreach(part; node.parts)
             {
                 auto renderable = renderablesPool.obtain();
+                renderable.environment = null;
                 renderable.material = part.material;
-                renderable.bones = part.bones;
+                renderable.bones = &part.bones;
                 renderable.meshPart.set(part.meshPart);
 
                 if(part.bones.length == 0)
@@ -272,16 +276,16 @@ public class RenderableBatch
             Renderable renderable = renderables[i];
             renderable.shader = shaderProvider.getShader(renderable);
         }
-    }
+    }*/
 
-   //public void render(IRenderableProvider renderableProvider)
-   //{
-   //    int offset = cast(int) renderables.length;
-   //    renderableProvider.getRenderables(renderables, renderablesPool);
-   //    for (int i = offset; i < renderables.length; i++)
-   //    {
-   //        Renderable renderable = renderables[i];
-   //        renderable.shader = shaderProvider.getShader(renderable);
-   //    }
-   //}
+   public void render(IRenderableProvider renderableProvider)
+   {
+       int offset = cast(int) renderables.length;
+       renderableProvider.getRenderables(renderables, renderablesPool);
+       for (int i = offset; i < renderables.length; i++)
+       {
+           Renderable renderable = renderables[i];
+           renderable.shader = shaderProvider.getShader(renderable);
+       }
+   }
 }

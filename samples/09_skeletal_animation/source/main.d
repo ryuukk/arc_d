@@ -10,11 +10,14 @@ import arc.engine;
 import arc.math;
 import arc.gfx.shader;
 import arc.gfx.shader_provider;
+import arc.gfx.shader_program;
 import arc.gfx.camera;
 import arc.gfx.node;
+import arc.gfx.node_part;
 import arc.gfx.material;
 import arc.gfx.model;
-import arc.gfx.modelloader;
+import arc.gfx.model_instance;
+import arc.gfx.model_loader;
 import arc.gfx.rendering;
 import arc.gfx.animation;
 import arc.gfx.renderable;
@@ -35,10 +38,7 @@ public class MyGame : IApp
     public void create()
     {
         _cam = new PerspectiveCamera(67, Core.graphics.getWidth(), Core.graphics.getHeight());
-        _cam.near = 1.0f;
-        _cam.far = 100.0f;
-        _cam.position = Vec3(0, 10, 5);
-        _cam.lookAt(0, 0, 0);
+        _cam.position = Vec3(0, 0, 1);
         _cam.update();
 
         {
@@ -68,6 +68,8 @@ public class MyGame : IApp
 
     public void render(float dt)
     {
+        _a += dt;
+
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
 
@@ -79,42 +81,42 @@ public class MyGame : IApp
         _program.setUniformMat4("u_proj", _cam.projection);
         _program.setUniformMat4("u_view", _cam.view);
 
-        void renderNode(Node node)
-        {
-             auto transform = _transform * node.globalTransform;
-            _program.setUniformMat4("u_world", transform);
-            foreach(NodePart part; node.parts)
-            {
-                _program.setUniformMat4Array("u_bones", cast(int) part.bones.length, part.bones);
-    
-                if(part.material.has(TextureAttribute.diffuse))
-                {
-                    auto ta = part.material.get!TextureAttribute(TextureAttribute.diffuse);
-                    ta.descriptor.texture.bind();
-                    _program.setUniformi("u_texture", 0);
-                }
-
-                for(int i = 0; i < part.bones.length;i++)
-                {
-                    auto t = part.bones[i];
-                    //writeln("T: ",i);
-                    //t.print();
-                }
-
-                part.meshPart.render(_program, true);
-            }
-    
-            foreach(Node child; node.children)
-                renderNode(child);
-        }
-
         foreach(Node node; _modelInstance.nodes)
         {
             renderNode(node);
         }
-        _modelInstance.transform.set(Vec3(0,0,0), Quat.fromAxis(0, 1, 0, _a));
+        _modelInstance.transform.set(Vec3(0,0,0), Quat.fromAxis(0, 1, 0, _a), Vec3(1,1,1));
         
         _program.end();
+    }
+
+    void renderNode(Node node)
+    {
+         auto transform = _transform * node.globalTransform;
+        _program.setUniformMat4("u_world", transform);
+        foreach(NodePart part; node.parts)
+        {
+            _program.setUniformMat4Array("u_bones", cast(int) part.bones.length, part.bones);
+
+            if(part.material.has(TextureAttribute.diffuse))
+            {
+                auto ta = part.material.get!TextureAttribute(TextureAttribute.diffuse);
+                ta.descriptor.texture.bind();
+                _program.setUniformi("u_texture", 0);
+            }
+
+            for(int i = 0; i < part.bones.length;i++)
+            {
+                auto t = part.bones[i];
+                //writeln("T: ",i);
+                //t.print();
+            }
+
+            part.meshPart.render(_program, true);
+        }
+
+        foreach(Node child; node.children)
+            renderNode(child);
     }
 
     public void resize(int width, int height)

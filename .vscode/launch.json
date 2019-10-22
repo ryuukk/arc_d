@@ -5,38 +5,12 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Debug MSVC",
-            "type": "cppvsdbg",
-            "request": "launch",
-            "program": "${workspaceRoot}/bin/skeletal_animation.exe",
-            "symbolSearchPath": "${workspaceRoot}/bin/",
-            "cwd": "${workspaceRoot}/bin/",
-        },
-        {
-            "name": "Debug MSVC 2",
+            "name": "[DEBUG] Skeletal Animation",
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceRoot}/bin/renderbatch.exe",
             "symbolSearchPath": "${workspaceRoot}/bin/",
             "cwd": "${workspaceRoot}/bin/",
         },
-        {
-            "name": "Debug MAGO",
-            "type": "gdb",
-            "request": "launch",
-            
-            "target": "${workspaceRoot}/bin/skeletal_animation.exe",
-            "symbolSearchPath": "${workspaceRoot}/bin/",
-            "cwd": "${workspaceRoot}/bin/",
-        },
-        {
-            "name": "Debug MAGO 2",
-            "type": "gdb",
-            "request": "launch",
-            
-            "target": "${workspaceRoot}/bin/renderbatch.exe",
-            "symbolSearchPath": "${workspaceRoot}/bin/",
-            "cwd": "${workspaceRoot}/bin/",
-        }
     ]
 }

@@ -33,7 +33,7 @@ class CameraController : InputAdapter
 
     public override bool keyDown(int keycode)
     {
-        final switch (keycode)
+        switch (keycode)
         {
         case STRAFE_LEFT:
             _strafeLeft = true;
@@ -54,14 +54,14 @@ class CameraController : InputAdapter
         case DOWN:
             _down = true;
             break;
+            default: return false;
         }
-
-        return true;
+        return _strafeLeft || _strafeRight || _forward || _backward || _up || _down;
     }
 
     public override bool keyUp(int keycode)
     {
-        final switch (keycode)
+        switch (keycode)
         {
         case STRAFE_LEFT:
             _strafeLeft = false;
@@ -82,9 +82,9 @@ class CameraController : InputAdapter
         case DOWN:
             _down = false;
             break;
+            default: return false;
         }
-
-        return true;
+        return _strafeLeft || _strafeRight || _forward || _backward || _up || _down;
     }
     
     public override bool touchDragged(int screenX, int screenY, int pointer)

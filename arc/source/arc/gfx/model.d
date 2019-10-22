@@ -18,232 +18,8 @@ import arc.gfx.mesh_part;
 import arc.gfx.buffers;
 import arc.gfx.node;
 import arc.gfx.renderable;
-import arc.gfx.modelloader;
-
-public class ModelInstance : IRenderableProvider
-{
-    public static bool defaultShareKeyframes = true;
-
-    public Material[] materials;
-    public Node[] nodes;
-    public Animation[] animations;
-    public Model model;
-
-    public Mat4 transform = Mat4.identity;
-
-    public this(Model model)
-    {
-        this.model = model;
-        copyNodes(this.model);
-
-
-
-        invalidate();
-        copyAnimations(this.model);
-        calculateTransforms();
-    }
-
-    private void copyNodes(Model model)
-    {
-        nodes.length = model.nodes.length;
-
-        for (int i = 0; i < model.nodes.length; i++)
-        {
-            auto node = model.nodes[i];
-            auto copy = new Node;
-            copy.set(node);
-            nodes[i] = copy;
-        }
-    }
-
-    private void copyAnimations(Model model)
-    {
-        foreach(sourceAnim; model.animations)
-        {
-            copyAnimation(sourceAnim, defaultShareKeyframes);
-        }
-    }
-
-    private void copyAnimation(Animation sourceAnim, bool shareKeyFrames)
-    {
-        Animation animation = new Animation;
-        animation.id = sourceAnim.id;
-        animation.duration = sourceAnim.duration;
-        foreach (i, NodeAnimation nanim; sourceAnim.nodeAnimations)
-        {
-            Node node = getNode(nodes, nanim.node.id);
-            if (node is null)
-                continue;
-
-            NodeAnimation nodeAnim = new NodeAnimation;
-            nodeAnim.node = node;
-            if (shareKeyFrames)
-            {
-                nodeAnim.translation = nanim.translation;
-                nodeAnim.rotation = nanim.rotation;
-                nodeAnim.scaling = nanim.scaling;
-            }
-            else
-            {
-                nodeAnim.translation.length = nanim.translation.length;
-                nodeAnim.rotation.length = nanim.rotation.length;
-                nodeAnim.scaling.length = nanim.scaling.length;
-                foreach (j, kf; nanim.translation)
-                    {
-                        nodeAnim.translation[j] = new NodeKeyframe!Vec3;
-                        nodeAnim.translation[j].keytime = kf.keytime;
-                        nodeAnim.translation[j].value = kf.value;
-                    }
-                foreach (j, kf; nanim.rotation)
-                    {
-                        nodeAnim.rotation[j] = new NodeKeyframe!Quat;
-                        nodeAnim.rotation[j].keytime = kf.keytime;
-                        nodeAnim.rotation[j].value =kf.value;
-                    }
-                foreach (j, kf; nanim.scaling)
-                    {
-                        nodeAnim.scaling[j] = new NodeKeyframe!Vec3;
-                        nodeAnim.scaling[j].keytime = kf.keytime;
-                        nodeAnim.scaling[j].value = kf.value;
-                    }
-            }
-            if (nodeAnim.translation.length > 0 || nodeAnim.rotation.length > 0
-                    || nodeAnim.scaling.length > 0)
-                animation.nodeAnimations ~= nodeAnim;
-        }
-
-        if (animation.nodeAnimations.length > 0)
-            animations ~= animation;
-    }
-
-    public void calculateTransforms()
-    {
-        int n = cast(int) nodes.length;
-
-        for (int i = 0; i < n; i++)
-        {
-            nodes[i].calculateTransforms(true);
-        }
-        for (int i = 0; i < n; i++)
-        {
-            nodes[i].calculateBoneTransforms(true);
-        }
-    }
-
-    public void invalidate()
-    {
-		for (int i = 0, n = cast(int)nodes.length; i < n; ++i) {
-			invalidate(nodes[i]);
-		}
-    }
-
-    private void invalidate(Node node)
-    {
-        import std.algorithm: canFind;
-
-        for (int i = 0, n = cast(int)node.parts.length; i < n; ++i)
-        {
-	        NodePart part = node.parts[i];
-			auto bindPose = part.invBoneBindTransforms;
-			if (bindPose !is null) {
-				for (int j = 0; j < bindPose.length; ++j) 
-                {
-                    auto bpN = bindPose[j].node;
-                    auto bpNID = bindPose[j].node.id;
-                    
-                    auto bone = getNode(nodes, bindPose[j].node.id);
-
-                    if(bone is null)
-                        writeln("Bone is null");
-
-					bindPose[j].node = bone;
-				}
-			}
-            // todo: finish
-            if (!materials.canFind(part.material))
-            {
-                //int midx = 
-            }
-
-			//if (!materials.contains(part.material, true)) {
-			//	final int midx = materials.indexOf(part.material, false);
-			//	if (midx < 0)
-			//		materials.add(part.material = part.material.copy());
-			//	else
-			//		part.material = materials.get(midx);
-			//}
-
-            foreach(Node child; node.children)
-            {
-                invalidate(child);
-            }
-        }
-    }
-
-    public Animation getAnimation(string id, bool ignoreCase = false)
-    {
-        int n = cast(int) animations.length;
-
-        if(ignoreCase)
-        {
-            throw new Exception("Not supported yet");
-        }
-        else
-        {
-            foreach(animation; animations)
-            {
-                if(animation.id == id) return animation;
-            }
-        }
-
-        return null;
-    }
-
-    public void getRenderables(ref Array!Renderable renderables, Pool!Renderable pool)
-    {
-        foreach(Node node; nodes)
-        {
-            getRenderables(node, renderables, pool);
-        }
-    }
-
-    private void getRenderables(Node node, ref Array!Renderable renderables, Pool!Renderable pool)
-    {
-        if (node.parts.length > 0)
-        {
-            foreach(NodePart nodePart; node.parts)
-            {
-                if (nodePart.enabled)
-                {
-                    auto renderable = pool.obtain();
-                    renderables.insert(getRenderable(renderable, node, nodePart));
-                }
-            }
-        }
-
-        foreach(Node child; node.children)
-        {
-            getRenderables(child, renderables, pool);
-        }
-    }
-
-    private Renderable getRenderable(Renderable renderable, Node node, NodePart nodePart)
-    {
-        nodePart.setRenderable(renderable);
-
-        if (nodePart.bones.length == 0)
-            renderable.worldTransform = transform * node.globalTransform;
-        else
-            renderable.worldTransform = transform;
-        return renderable;
-    }
-}
-
-public struct BoneId
-{
-    public string id;
-    public Mat4 transform;
-}
+import arc.gfx.model_loader;
+import arc.gfx.node_part;
 
 public class Model
 {
@@ -254,7 +30,7 @@ public class Model
     public Mesh[] meshes;
     public MeshPart[] meshParts;
 
-    Tuple!(string, Mat4)[][NodePart] nodePartBones;
+    Bone[][NodePart] nodePartBones;
 
     public void load(ModelData data)
     {
@@ -282,7 +58,6 @@ public class Model
             numIndices += modelMesh.parts[i].indices.length;
         }
         
-
         bool hasIndices = numIndices > 0;
 
         auto attributes = new VertexAttributes(modelMesh.attributes);
@@ -305,14 +80,11 @@ public class Model
             meshPart.size = hasIndices ? cast(int) part.indices.length : numVertices;
             meshPart.mesh = mesh;
             if (hasIndices)
-            {
                indices ~= part.indices;
-            }
             offset += meshPart.size;
             meshParts[i] = meshPart;
         }
 
-        writeln("Indices: ", indices.length);
         mesh.setIndices(indices);
         foreach (part; meshParts)
             part.update();
@@ -349,17 +121,19 @@ public class Model
             nodes[i] = loadNode(node);
         }
 
-        foreach(e; nodePartBones.byKeyValue())
+        foreach(ref e; nodePartBones.byKeyValue())
         {
             e.key.invBoneBindTransforms.length = e.value.length;
 
             for(int i = 0; i < e.value.length; i++)
             {
                 auto pair = e.value[i];
-                auto node = getNode(nodes, pair[0]);
-                auto invTransform = Mat4.inv(pair[1]);
-                e.key.invBoneBindTransforms[i].node = node;
-                e.key.invBoneBindTransforms[i].transform = invTransform;
+                auto node = getNode(nodes, pair.id);
+                if(node is null) 
+                    throw new Exception(format("node: %s can't be found...", pair.id));
+                
+                auto invTransform = Mat4.inv(pair.transform);
+                e.key.invBoneBindTransforms[i] = InvBoneBind(node, invTransform);
             }
         }
     }
@@ -408,35 +182,29 @@ public class Model
                 if (meshPart is null || meshMaterial is null)
                     throw new Exception("invalid node");
 
-                if (meshPart !is null && meshMaterial !is null)
-                {
-                    NodePart nodePart = new NodePart();
-                    nodePart.meshPart = meshPart;
-                    nodePart.material = meshMaterial;
-                    node.parts[i] = nodePart;
+                NodePart nodePart = new NodePart();
+                nodePart.meshPart = meshPart;
+                nodePart.material = meshMaterial;
+                node.parts[i] = nodePart;
 
-                    if (modelNodePart.bones !is null)
-                    {
-                        nodePartBones[nodePart] = modelNodePart.bones;
-                    }
-                }
+                if (modelNodePart.bones.length > 0)
+                    nodePartBones[nodePart] = modelNodePart.bones;
             }
         }
 
         if (modelNode.children.length > 0)
         {
-            node.children.length = modelNode.children.length;
             foreach (i, ModelNode child; modelNode.children)
             {
-                node.children[i] = loadNode(child);
-                node.children[i].parent = node;
+                auto c = loadNode(child);
+                node.addChild(c);
             }
         }
 
         return node;
     }
 
-    private void loadAnimations(ModelAnimation[] modelAnimations)
+    private void loadAnimations(in ModelAnimation[] modelAnimations)
     {
         for (int i = 0; i < modelAnimations.length; i++)
         {
@@ -448,58 +216,58 @@ public class Model
             {
                 auto nanim = anim.nodeAnimations[j];
                 auto node = getNode(nodes, nanim.nodeId);
-                if (node is null)
-                    continue;
+                if(node is null) throw new Exception("node can't be found...");
 
                 NodeAnimation nodeAnim = new NodeAnimation;
                 nodeAnim.node = node;
 
                 if (nanim.translation.length > 0)
                 {
-                    nodeAnim.translation.length = nanim.translation.length;
+                    //nodeAnim.translation.length = nanim.translation.length;
                     foreach (k, kf; nanim.translation)
                     {
                         if (kf.keytime > animation.duration)
                             animation.duration = kf.keytime;
 
                         // todo: some might not have value, so we might was take node translation instead
-                        nodeAnim.translation[k] = new NodeKeyframe!Vec3;
-                        nodeAnim.translation[k].keytime = kf.keytime;
-                        nodeAnim.translation[k].value = kf.value;
+                        auto nkt = NodeKeyframe!Vec3();
+                        nkt.keytime = kf.keytime;
+                        nkt.value = kf.value;
+                        nodeAnim.translation ~= nkt;
                     }
                 }
 
                 if (nanim.rotation.length > 0)
                 {
-                    nodeAnim.rotation.length = nanim.rotation.length;
+                    //nodeAnim.rotation.length = nanim.rotation.length;
                     foreach (k, kf; nanim.rotation)
                     {
                         if (kf.keytime > animation.duration)
                             animation.duration = kf.keytime;
                         // todo: some might not have value, so we might was take node translation instead
-                        nodeAnim.rotation[k] = new NodeKeyframe!Quat;
-                        nodeAnim.rotation[k].keytime = kf.keytime;
-                        nodeAnim.rotation[k].value = kf.value;
+                        auto nkt = NodeKeyframe!Quat();
+                        nkt.keytime = kf.keytime;
+                        nkt.value = kf.value;
+                        nodeAnim.rotation ~= nkt;
                     }
                 }
 
                 if (nanim.scaling.length > 0)
                 {
-                    nodeAnim.scaling.length = nanim.scaling.length;
+                    //nodeAnim.scaling.length = nanim.scaling.length;
                     foreach (k, kf; nanim.scaling)
                     {
                         if (kf.keytime > animation.duration)
                             animation.duration = kf.keytime;
                         // todo: some might not have value, so we might was take node translation instead
-                        nodeAnim.scaling[k] = new NodeKeyframe!Vec3;
-                        nodeAnim.scaling[k].keytime = kf.keytime;
-                        nodeAnim.scaling[k].value = kf.value;
+                        auto nkt = NodeKeyframe!Vec3();
+                        nkt.keytime = kf.keytime;
+                        nkt.value = kf.value;
+                        nodeAnim.scaling ~= nkt;
                     }
                 }
-
-                if (nodeAnim.translation.length > 0
-                        || nodeAnim.rotation.length > 0 && nodeAnim.scaling.length > 0)
-                    animation.nodeAnimations ~= nodeAnim;
+                
+                animation.nodeAnimations ~= nodeAnim;
             }
             if (animation.nodeAnimations.length > 0)
                 animations ~= animation;

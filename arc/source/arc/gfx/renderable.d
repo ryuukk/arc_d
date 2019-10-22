@@ -14,23 +14,12 @@ public class Renderable
     public MeshPart meshPart;
     public Material material;
     public Environment environment;
-    public Mat4[] bones;
+    public Mat4[]* bones;
     public IShader shader;
 
     public this()
     {
         meshPart = new MeshPart;
-    }
-
-    public Renderable set(Renderable renderable)
-    {
-        worldTransform = renderable.worldTransform;
-        material = renderable.material;
-        meshPart.set(renderable.meshPart);
-        bones = renderable.bones;
-        environment = renderable.environment;
-        shader = renderable.shader;
-        return this;
     }
 }
 

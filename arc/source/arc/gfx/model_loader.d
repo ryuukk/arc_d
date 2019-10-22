@@ -1,15 +1,19 @@
-module arc.gfx.modelloader;
+module arc.gfx.model_loader;
 
 import std.json;
 import std.stdio;
 import std.container;
 import std.typecons;
+import std.path;
+import std.file : readText;
+import std.datetime.stopwatch;
 
 import arc.pool;
 import arc.math;
 import arc.color;
 import arc.core;
 import arc.collections.arraymap;
+import arc.collections.array;
 import arc.gfx.node;
 import arc.gfx.material;
 import arc.gfx.animation;
@@ -23,25 +27,202 @@ import arc.gfx.renderable;
 
 ModelData loadModelData(string path)
 {
-    import std.path;
-    import std.file : readText;
-
     string json = path.readText;
 
-    JSONValue j = parseJSON(json);
+    JSONValue root = parseJSON(json);
 
-    ModelData model = new ModelData;
+    ModelData data = new ModelData;
 
-    int lo = cast(int) j["version"].array[0].integer;
-    int hi = cast(int) j["version"].array[1].integer;
-    model.id = ("id" in j) ? j["id"].str : path;
+    int lo = cast(int) root["version"].array[0].integer;
+    int hi = cast(int) root["version"].array[1].integer;
+    data.id = ("id" in root) ? root["id"].str : path;
 
-    parseMeshes(model, j);
-    parseNodes(model, j);
-    parseMaterials(model, j, dirName(path));
-    parseAnimations(model, j);
+    StopWatch sw;
+    sw.start();
 
-    return model;
+    parseMeshes(data, root);
+    parseNodes(data, root);
+    parseMaterials(data, root, dirName(path));
+    parseAnimations(data, root);
+
+    writeln("DEBUG: Loaded model: ", path," in: ", sw.peek.total!"msecs", " msecs");
+
+    return data;
+}
+
+void parseMeshes2(ModelData data, in JSONValue root)
+{
+    if("meshes" in root)
+    {
+        auto meshes = root["meshes"].array;
+        foreach(mesh; meshes)
+        {
+            auto jsonMesh = new ModelMesh();
+            jsonMesh.id = ("id" in mesh) ? mesh["id"].str : "";
+
+            auto attributes = mesh["attributes"].array;
+            jsonMesh.attributes = parseAttributes2(attributes);
+
+            auto pv = mesh["vertices"].array;
+            auto pvi = 0;
+            jsonMesh.vertices = new float[pv.length];
+            foreach(pva; pv)
+            {
+                jsonMesh.vertices[pvi] = pva.floating;
+                pvi++;
+            }
+
+            auto meshParts = mesh["parts"].array;
+            jsonMesh.parts = new ModelMeshPart[meshParts.length];
+            for(int i = 0; i < meshParts.length; i++)
+            {
+                auto meshPart = meshParts[i];
+                auto jsonPart = new ModelMeshPart();
+                auto partId = meshPart["id"].str;
+
+                foreach(other; jsonMesh.parts)
+                {
+                    if(other is null) continue;
+                    if(other.id == partId) throw new Exception("fuck you");
+                }
+                jsonPart.id = partId;
+                auto ptype = meshPart["type"].str;
+                jsonPart.primitiveType = parseType(ptype);
+
+                auto pi = meshPart["indices"].array;
+                jsonPart.indices = new short[pi.length];
+                auto pii = 0;
+                foreach(pva; pi)
+                {
+                    jsonPart.indices[pii] = cast(short)pva.integer;
+                    pii ++;
+                }
+
+                jsonMesh.parts[i] = jsonPart;
+            }
+            data.meshes ~= jsonMesh;
+        }
+    }
+}
+
+VertexAttribute[] parseAttributes2(in JSONValue[] attributes)
+{
+    int unit = 0;
+    int blendWeightCount = 0;
+    auto ret = new VertexAttribute[attributes.length];
+
+    for(int i = 0; i < attributes.length; i++)
+    {
+        auto attr = attributes[i].str;
+        if (attr == "POSITION")
+        {
+            ret[i] = VertexAttribute.position();
+        }
+        else if (attr == "NORMAL")
+        {
+            ret[i] = VertexAttribute.normal();
+        }
+        else if (attr == "COLOR")
+        {
+            ret[i] = VertexAttribute.colorUnpacked();
+        }
+        else if (attr == "COLORPACKED")
+        {
+            ret[i] = VertexAttribute.colorPacked();
+        }
+        else if (attr == "TANGENT")
+        {
+            ret[i] = VertexAttribute.tangent();
+        }
+        else if (attr == "BINORMAL")
+        {
+            ret[i] = VertexAttribute.binormal();
+        }
+        else if (attr[0] == 'T' && attr[1] == 'E' && attr[2] == 'X')
+        {
+            ret[i] = VertexAttribute.texCoords(unit++);
+        }
+        else if (attr[0] == 'B' && attr[1] == 'L' && attr[2] == 'E')
+        {
+            ret[i] = VertexAttribute.boneWeight(blendWeightCount++);
+        }
+        else
+        {
+            throw new Exception("Unsupported attribute: ", attr);
+        }
+    }
+    return ret;
+}
+
+void parseNodes2(ModelData data, in JSONValue root)
+{
+    if("nodes" in root)
+    {
+        auto nodes = root["nodes"].array;
+        foreach(node; nodes)
+        {
+            auto n = parseNodeRecursively2(node);
+            data.nodes ~= n;
+        }
+    }
+}
+
+ModelNode parseNodeRecursively2(in JSONValue json)
+{
+    auto jsonNode = new ModelNode();
+    jsonNode.id = json["id"].str;
+
+    jsonNode.translation = getVec3OrDefault(json, "translation", Vec3(0, 0, 0));
+    jsonNode.rotation = getQuatOrDefault(json, "rotation", Quat.identity);
+    jsonNode.scale = getVec3OrDefault(json, "scale", Vec3(1, 1, 1));
+
+    if("mesh" in json) jsonNode.meshId = json["mesh"].str;
+    if("parts" in json)
+    {
+        auto materials = json["parts"].array;
+        jsonNode.parts = new ModelNodePart[materials.length];
+        for(int i = 0; i < materials.length; i++)
+        {
+            auto material = materials[i];
+            auto nodePart = new ModelNodePart();
+
+            nodePart.materialId = material["materialid"].str;
+            nodePart.meshPartId = material["meshpartid"].str;
+
+            if("bones" in material)
+            {
+                auto bones = material["bones"].array;
+                nodePart.bones = new Bone[bones.length];
+
+                for(int j = 0; j < bones.length; j++)
+                {
+                    auto bone = bones[j];
+                    auto nodeId = bone["node"].str;
+
+                    auto transform = Mat4.set(
+                        getVec3OrDefault(bone, "translation"),
+                        getQuatOrDefault(bone, "rotation"),
+                        getVec3OrDefault(bone, "scale"),
+                        );
+
+                    nodePart.bones[j] = Bone(nodeId, transform);
+                }
+            }
+            jsonNode.parts[i] = nodePart;
+        }
+    }
+    if("children" in json)
+    {
+        auto children = json["children"].array;
+        jsonNode.children = new ModelNode[children.length];
+        for(int i = 0; i < children.length; i++)
+        {
+            auto child = children[i];
+            jsonNode.children[i] = parseNodeRecursively2(child);
+        }
+    }
+
+    return jsonNode;
 }
 
 private void parseAnimations(ModelData model, JSONValue json)
@@ -58,19 +239,15 @@ private void parseAnimations(ModelData model, JSONValue json)
             model.animations[i] = animation;
             animation.id = anim["id"].str;
             animation.nodeAnimations.length = nodes.length;
+
             foreach (j, JSONValue node; nodes)
             {
                 ModelNodeAnimation nodeAnim = new ModelNodeAnimation;
                 animation.nodeAnimations[j] = nodeAnim;
                 nodeAnim.nodeId = node["boneId"].str;
 
-                // For backwards compatibility (version 0.1):
+                // v0.1
                 JSONValue[] keyframes = node["keyframes"].array;
-
-                //nodeAnim.translation.length = keyframes.length;
-                //nodeAnim.rotation.length = keyframes.length;
-                //nodeAnim.scaling.length = keyframes.length;
-
                 foreach (k, JSONValue keyframe; keyframes)
                 {
                     float keytime = keyframe["keytime"].floating / 1000f;
@@ -196,7 +373,7 @@ private ModelNode parseNodesRecursively(JSONValue json)
     if ("translation" in json)
         jsonNode.translation = readVec3(json["translation"]);
     else
-        jsonNode.translation = Vec3();
+        jsonNode.translation = Vec3(0,0,0);
 
     if ("scale" in json)
         jsonNode.scale = readVec3(json["scale"]);
@@ -218,7 +395,6 @@ private ModelNode parseNodesRecursively(JSONValue json)
         foreach (i, material; materials)
         {
             ModelNodePart nodePart = new ModelNodePart();
-
             nodePart.meshPartId = material["meshpartid"].str;
             nodePart.materialId = material["materialid"].str;
 
@@ -231,18 +407,13 @@ private ModelNode parseNodesRecursively(JSONValue json)
                 {
                     string nodeId = bone["node"].str;
 
-                    Mat4 transform = Mat4.identity;
+                    Vec3 translation = readVec3(bone["translation"]);
+                    Quat rotation = readQuat(bone["rotation"]);
+                    Vec3 scale = readVec3(bone["scale"]);
 
-                    JSONValue[] translation = bone["translation"].array;
-                    JSONValue[] rotation = bone["rotation"].array;
-                    JSONValue[] scale = bone["scale"].array;
+                    Mat4 transform = Mat4.set(translation, rotation, scale);
 
-                    transform.set(translation[0].floating, translation[1].floating,
-                            translation[2].floating, rotation[0].floating, rotation[1].floating,
-                            rotation[2].floating, rotation[3].floating,
-                            scale[0].floating, scale[1].floating, scale[2].floating);
-
-                    nodePart.bones[j] = tuple(nodeId, transform);
+                    nodePart.bones[j] = Bone(nodeId, transform);
                 }
             }
 
@@ -254,6 +425,7 @@ private ModelNode parseNodesRecursively(JSONValue json)
     {
         JSONValue[] children = json["children"].array;
         jsonNode.children.length = children.length;
+        jsonNode.children.reserve(cast(int)children.length);
 
         foreach (i, JSONValue child; children)
         {
@@ -265,17 +437,45 @@ private ModelNode parseNodesRecursively(JSONValue json)
     return jsonNode;
 }
 
-private Vec3 readVec3(JSONValue value)
+Vec2 getVec2OrDefault(in JSONValue json, string key, Vec2 d = Vec2())
+{
+    if(key in json)
+    {
+        auto value = json[key].array;
+        return Vec2(value[0].floating, value[1].floating);
+    }
+    else return d;
+}
+Vec3 getVec3OrDefault(in JSONValue json, string key, Vec3 d = Vec3())
+{
+    if(key in json)
+    {
+        auto value = json[key].array;
+        return Vec3(value[0].floating, value[1].floating, value[2].floating);
+    }
+    else return d;
+}
+Quat getQuatOrDefault(in JSONValue json, string key, Quat d = Quat.identity)
+{
+    if(key in json)
+    {
+        auto value = json[key].array;
+        return Quat(value[0].floating, value[1].floating, value[2].floating, value[3].floating);
+    }
+    else return d;
+}
+
+private Vec3 readVec3(in JSONValue value)
 {
     return Vec3(value.array[0].floating, value.array[1].floating, value.array[2].floating);
 }
 
-private Vec2 readVec2(JSONValue value)
+private Vec2 readVec2(in JSONValue value)
 {
     return Vec2(value.array[0].floating, value.array[1].floating);
 }
 
-private Quat readQuat(JSONValue value)
+private Quat readQuat(in JSONValue value)
 {
     return Quat(value.array[0].floating, value.array[1].floating,
             value.array[2].floating, value.array[3].floating);
@@ -296,7 +496,6 @@ private void parseMeshes(ModelData model, JSONValue json)
             JSONValue attributes = mesh["attributes"];
             JSONValue vertices = mesh["vertices"];
             JSONValue parts = mesh["parts"];
-
             parseAttributes(jsonMesh, attributes);
             parseVertices(jsonMesh, vertices);
             parseMeshParts(jsonMesh, parts);
@@ -482,11 +681,23 @@ public class ModelNode
     public ModelNode[] children;
 }
 
+public struct Bone
+{
+    public string id;
+    public Mat4 transform;
+
+    public this(string id, Mat4 transform)
+    {
+        this.id = id;
+        this.transform = transform;
+    }
+}
+
 public class ModelNodePart
 {
     public string materialId;
     public string meshPartId;
-    public Tuple!(string, Mat4)[] bones;
+    public Bone[] bones;
     public int[][] uvMapping;
 }
 

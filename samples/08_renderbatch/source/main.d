@@ -14,9 +14,16 @@ import arc.gfx.shader;
 import arc.gfx.shader_provider;
 import arc.gfx.camera;
 import arc.gfx.model;
-import arc.gfx.modelloader;
+import arc.gfx.model_instance;
+import arc.gfx.model_loader;
 import arc.gfx.rendering;
 import arc.gfx.animation;
+
+
+struct Test
+{
+    int[]* test;
+}
 
 public class Entity
 {
@@ -30,7 +37,8 @@ public class Entity
     public void update(float dt)
     {
         a += dt;
-        instance.transform.set(position, Quat.fromAxis(0, 1, 0, a));
+        instance.transform = Mat4.set(position, Quat.fromAxis(0, 1, 0, a), Vec3(1,1,1));
+
 
         if(controller !is null)
             controller.update(dt);
@@ -62,11 +70,12 @@ public class MyGame : IApp
 
         _controller = new CameraController(_cam);
 
-        auto dataA = loadModelData("data/character_male_0.g3dj");
+        auto dataA = loadModelData("data/Knight.g3dj");
         assert(dataA !is null, "can't parse dataA");
 
         auto dataB = loadModelData("data/tree_small_0.g3dj");
         assert(dataB !is null, "can't parse dataB");
+
 
         _modelA = new Model;
         _modelA.load(dataA);
@@ -76,46 +85,71 @@ public class MyGame : IApp
 
         _batch = new RenderableBatch(new DefaultShaderProvider("data/default.vert".readText, "data/default.frag".readText));
 
+        auto e = new Entity;
+        e.id = 0;
+        e.position = Vec3(0,0,0);
 
-        int s = 8;
-        int id = 0;
-        for(int x = -s; x < s; x++)
-        {
-            for(int y = -s; y < s; y++)
-            {
-                auto e = new Entity;
-                e.id = ++id;
-                e.position = Vec3(x*2, 0, y*2);
-
-                auto v = id % 2;
-                if(v == 0)
-                {
-                    e.instance = new ModelInstance(_modelA);
-                    e.controller = new AnimationController(e.instance);
-                    e.controller.animate("run_1h");
-                }
-                else //if(v == 1)
-                {
-                    e.instance = new ModelInstance(_modelB);
-                }
-                //else
-                //{
-                //    e.instance = new ModelInstance(_model);
-                //    e.controller = new AnimationController(e.instance);
-                //    e.controller.animate("run_1h");
-                //}
-                
-                entities.insert(e);
-            }
-        }
+        e.instance = new ModelInstance(_modelA);
+        e.controller = new AnimationController(e.instance);
+        e.controller.animate("Attack");
+        entities.insert(e);
+        //int s = 10;
+        //int pad = 2;
+        //int id = 0;
+        //for(int x = -s; x < s; x++)
+        //{
+        //    for(int y = -s; y < s; y++)
+        //    {
+        //        auto e = new Entity;
+        //        e.id = ++id;
+        //        e.position = Vec3(x*pad, 0, y*pad);
+        //
+        //        auto v = id % 2;
+        //        //if(v == 0)
+        //        {
+        //            e.instance = new ModelInstance(_modelA);
+        //            e.controller = new AnimationController(e.instance);
+        //            e.controller.animate("Attack");
+        //        }
+        //        //else //if(v == 1)
+        //        //{
+        //        //    e.instance = new ModelInstance(_modelB);
+        //        //}
+        //        //else
+        //        //{
+        //        //    e.instance = new ModelInstance(_model);
+        //        //    e.controller = new AnimationController(e.instance);
+        //        //    e.controller.animate("run_1h");
+        //        //}
+        //        
+        //        entities.insert(e);
+        //    }
+        //}
 
         writeln("Added: ", entities.length," entities");
         Core.input.setInputProcessor(_controller);
         GC.collect();
     }
 
+    int fpsAcc = 0;
+    int c = 0;
+    float timer = 0.0f;
     public void update(float dt)
     {
+        auto fps = Core.graphics.fps();
+        fpsAcc += fps;
+        timer += dt;
+        c++;
+
+        if (timer > 1.0f)
+        {
+            int f = fpsAcc / c;
+            writeln("FPS: ",fps," AVG: ",f);
+
+            c = 0;
+            fpsAcc = 0;
+            timer = 0;
+        }
         foreach(entity; entities)
             entity.update(dt);
 
@@ -158,6 +192,7 @@ int main()
 {
     auto config = new Configuration;
     config.windowTitle = "Sample 08 - RenderableBatch";
+    config.vsync = false;
     auto game = new MyGame;
     auto engine = new Engine(game, config);
     engine.run();

@@ -1,8 +1,10 @@
 module arc.gfx.animation;
 
+import std.stdio;
 import std.math;
 import arc.math;
 import arc.gfx.node;
+import arc.gfx.model_instance;
 
 public class Animation
 {
@@ -10,17 +12,15 @@ public class Animation
     public float duration = 0f;
     public NodeAnimation[] nodeAnimations;
 }
-
 public class NodeAnimation
 {
     public Node node;
-
     public NodeKeyframe!Vec3[] translation;
     public NodeKeyframe!Quat[] rotation;
     public NodeKeyframe!Vec3[] scaling;
 }
 
-public class NodeKeyframe(T)
+public struct NodeKeyframe(T)
 {
     public float keytime = 0f;
     public T value;
@@ -36,14 +36,10 @@ public struct Transform
 
     public Mat4 toMat4()
     {
-        Mat4 ret = Mat4.identity;
-        ret.set(translation.x, translation.y, translation.z,
-                rotation.x, rotation.y, rotation.z, rotation.w,
-                scale.x, scale.y, scale.z);
-        return ret;
+        return Mat4.set(translation, rotation, scale);
     }
 
-    public ref Transform idt()
+    public Transform idt()
     {
         translation = Vec3();
         rotation = Quat.identity;
@@ -51,33 +47,21 @@ public struct Transform
         return this;
     }
 
-    public ref Transform lerp(ref Vec3 targetT, ref Quat targetR, ref Vec3 targetS, float alpha)
+    public Transform lerp(in Vec3 targetT, in Quat targetR, in Vec3 targetS, float alpha)
     {
-        //Vec3.lerp(ref translation, ref targetT, alpha, out translation);
-        //translation = Vec3.lerp(translation, targetT, alpha);
-
-        //Quat.slerp(ref rotation, ref targetR, alpha, out rotation);
-        //rotation = Quat.slerp(rotation, targetR, alpha);
-
-
-        //Vec3.lerp(ref scale, ref targetS, alpha, out scale);
-        //scale = Vec3.lerp(scale, targetS, alpha);
-
-
         translation = targetT;
         rotation = targetR;
         scale = targetS;
+
         return this;
     }
 
-    
-        public ref Transform lerp(ref Transform transform, float alpha)
-        {
-            return lerp(transform.translation, transform.rotation, transform.scale, alpha);
-        }
+    public Transform lerp(in Transform transform, float alpha)
+    {
+        return lerp(transform.translation, transform.rotation, transform.scale, alpha);
+    }
 }
 
-import arc.gfx.model;
 
 public class BaseAnimationController
 {
@@ -100,16 +84,14 @@ public class BaseAnimationController
     protected void apply(Animation animation, float time, float weight)
     {
         assert(!_applying);
-        applyAnimation(transforms, weight, animation, time);
+
+        writeln(">DEBUG: apply with transforms");
+        applyAnimation(transforms, weight, animation, time, true);
     }
 
     protected void end()
     {
         assert(_applying);
-        foreach (item; transforms.byKeyValue())
-        {
-            item.key.localTransform = item.value.toMat4();
-        }
         transforms.clear();
         target.calculateTransforms();
         _applying = false;
@@ -124,7 +106,8 @@ public class BaseAnimationController
     protected void applyAnimation (Animation animation, float time) 
     {
         if (_applying) throw new Exception("Call end() first");
-        applyAnimation(null, 1.0f, animation, time);
+
+        applyAnimation(transforms, 1.0f, animation, time, false);
         target.calculateTransforms();
     }
 
@@ -146,15 +129,27 @@ public class BaseAnimationController
 
     final private static int getFirstKeyframeIndexAtTime(T)(ref NodeKeyframe!T[] arr, float time)
     {
-        int n = cast(int) arr.length - 1;
-        for (int i = 0; i < n; i++)
-        {
-            if (time >= arr[i].keytime && time <= arr[i + 1].keytime)
-            {
-                return i;
+            int lastIndex = cast(int) arr.length - 1;
+
+            // edges cases : time out of range always return first index
+            if (lastIndex <= 0 || time < arr[0].keytime || time > arr[lastIndex].keytime) {
+                return 0;
             }
-        }
-        return 0;
+            // binary search
+            int minIndex = 0;
+            int maxIndex = lastIndex;
+
+            while (minIndex < maxIndex) {
+                int i = (minIndex + maxIndex) / 2;
+                if (time > arr[i + 1].keytime) {
+                    minIndex = i + 1;
+                } else if (time < arr[i].keytime) {
+                    maxIndex = i - 1;
+                } else {
+                    return i;
+                }
+            }
+            return minIndex;
     }
 
     final private static Vec3 getTranslationAtTime(NodeAnimation nodeAnim, float time)
@@ -171,9 +166,8 @@ public class BaseAnimationController
 
         if (++index < nodeAnim.translation.length)
         {
-            auto secondKeyframe = nodeAnim.translation[index];
-            float t = (time - firstKeyframe.keytime) / (
-                    secondKeyframe.keytime - firstKeyframe.keytime);
+            //auto secondKeyframe = nodeAnim.translation[index];
+            //float t = (time - firstKeyframe.keytime) / (secondKeyframe.keytime - firstKeyframe.keytime);
             //result = Vec3.lerp(result, secondKeyframe.value, t);
             //result = secondKeyframe.value;
         }
@@ -195,8 +189,8 @@ public class BaseAnimationController
 
         if (++index < nodeAnim.rotation.length)
         {
-            auto secondKeyframe = nodeAnim.rotation[index];
-            float t = (time - firstKeyframe.keytime) / (secondKeyframe.keytime - firstKeyframe.keytime);
+            //auto secondKeyframe = nodeAnim.rotation[index];
+            //float t = (time - firstKeyframe.keytime) / (secondKeyframe.keytime - firstKeyframe.keytime);
             //result = Quat.slerp(result, secondKeyframe.value, t);
             //result = secondKeyframe.value;
         }
@@ -218,9 +212,8 @@ public class BaseAnimationController
 
         if (++index < nodeAnim.scaling.length)
         {
-            auto secondKeyframe = nodeAnim.scaling[index];
-            float t = (time - firstKeyframe.keytime) / (
-                    secondKeyframe.keytime - firstKeyframe.keytime);
+            //auto secondKeyframe = nodeAnim.scaling[index];
+            //float t = (time - firstKeyframe.keytime) / (secondKeyframe.keytime - firstKeyframe.keytime);
             //result = Vec3.lerp(result, secondKeyframe.value, t);
             //result = secondKeyframe.value;
         }
@@ -245,7 +238,7 @@ public class BaseAnimationController
         node.localTransform = transform.toMat4();
     }
 
-    private static void applyNodeAnimationBlending(NodeAnimation nodeAnim, Transform[Node] outt, float alpha, float time)
+    private static void applyNodeAnimationBlending(NodeAnimation nodeAnim, ref Transform[Node] outt, float alpha, float time)
     {
         Node node = nodeAnim.node;
         node.isAnimated = true;
@@ -267,33 +260,33 @@ public class BaseAnimationController
         }
     }
 
-    protected static void applyAnimation(Transform[Node] outt, float alpha, Animation animation, float time)
+    protected static void applyAnimation(ref Transform[Node] outt, float alpha, Animation animation, float time, bool useOut)
     {
-        if (outt is null)
+        if (!useOut)
         {
-            foreach (nodeAnim; animation.nodeAnimations)
+            for (int i = 0; i < animation.nodeAnimations.length; i++)
             {
+                auto nodeAnim = animation.nodeAnimations[i];
                 applyNodeAnimationDirectly(nodeAnim, time);
             }
         }
         else
         {
-            foreach (node; outt.keys)
+            foreach (ref node; outt.keys)
             {
                 node.isAnimated = false;
             }
 
-            foreach (nodeAnim; animation.nodeAnimations)
+            foreach (ref nodeAnim; animation.nodeAnimations)
             {
                 applyNodeAnimationBlending(nodeAnim, outt, alpha, time);
             }
 
-            foreach (e; outt.byKeyValue())
+            foreach (ref e; outt.byKeyValue())
             {
                 if (!e.key.isAnimated)
                 {
                     e.key.isAnimated = true;
-
                 }
             }
         }
@@ -304,7 +297,7 @@ import arc.pool;
 
 public class AnimationController : BaseAnimationController
 {
-    public class AnimationDesc
+    public class AnimationDesc : IPoolable
     {
         public Animation animation;
         public float speed = 0f;
@@ -322,7 +315,7 @@ public class AnimationController : BaseAnimationController
                 if(duration != 0f)
                 {
                     time += diff;
-                    loops = cast(int) abs(time / duration);
+                    loops = cast(int) fabs(time / duration);
                     if(time < 0f)
                     {
                         loops++;
@@ -354,6 +347,16 @@ public class AnimationController : BaseAnimationController
             }
             else
                 return dt;
+        }
+
+        public void reset()
+        {
+            animation = null;
+            speed = 0;
+            time = 0;
+            offset = 0;
+            duration = 0;
+            loopCount = 0;
         }
     }
     private Pool!AnimationDesc animationPool;

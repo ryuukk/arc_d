@@ -9,9 +9,10 @@
 	"targetType": "sourceLibrary",
 	"targetPath": "../bin",
 	"workingDirectory": "../bin",
+	
 	"dependencies": {
 		"bindbc-opengl": "~>0.9.0",
-		"bindbc-glfw": "~>0.6.0",
+		"bindbc-glfw": "~>0.8.1",
 		"bindbc-openal": "~>0.3.0",
 		"stb": "~>1.7.5"
 	},

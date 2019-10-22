@@ -233,7 +233,7 @@ public class DefaultShader : BaseShader
     /** @deprecated Replaced by {@link Config#defaultDepthFunc} Set to 0 to disable depth test */
     public static int defaultDepthFunc = GL_LEQUAL;
 
-    static this()
+    shared static this()
     {
         optionalAttributes = IntAttribute.cullFace | DepthTestAttribute.type;
     }
@@ -356,8 +356,8 @@ public class DefaultShader : BaseShader
         
         program.setUniformMat4(u_worldTrans, renderable.worldTransform);
         
-        if(config.numBones > 0 && renderable.bones.length > 0)
-            program.setUniformMat4Array("u_bones", config.numBones, renderable.bones);
+        if(config.numBones > 0 && renderable.bones !is null && renderable.bones.length > 0)
+            program.setUniformMat4Array("u_bones", config.numBones, *renderable.bones);
         
         //if (!renderable.material.has(BlendingAttribute.Type))
         //    context.setBlending(false, BlendingFactorSrc.SrcAlpha, BlendingFactorDest.OneMinusSrcAlpha);
@@ -383,7 +383,6 @@ public class DefaultShader : BaseShader
             program.setUniformi(u_diffuseTexture, unit);
             program.setUniformf(u_diffuseUVTransform, ta.offsetU, ta.offsetV, ta.scaleU, ta.scaleV);
         }
-
         context.setCullFace(cullFace);
         context.setDepthTest(depthFunc, depthRangeNear, depthRangeFar);
         context.setDepthMask(depthMask);

@@ -197,9 +197,10 @@ public class ShaderProgram
             _uniformSizes[name] = size;
             _uniformNames[i] = name;
 
-            //version(DEBUG_SHADER)
+            version(DEBUG_SHADER)
             {
-                writeln("UNIFORM: ", name);
+                writeln("UNIFORM: ", name, "loc:", location, " loc cached: ", _uniforms[name]);
+
             }
         }
     }
@@ -212,6 +213,7 @@ public class ShaderProgram
         if ((location = _attributes.get(name, -2)) == -2)
         {
             location = glGetAttribLocation(_program, name.ptr);
+
             _attributes[name] = location;
         }
         return location;
@@ -221,7 +223,7 @@ public class ShaderProgram
     {
         if (_invalidated)
         {
-            //version(DEBUG_SHADER)
+            version(DEBUG_SHADER)
             {
                 writeln("Recompile shader");
             }
@@ -318,26 +320,51 @@ public class ShaderProgram
     {
         checkManaged();
         int location = fetchUniformLocation(name);
-        glUniformMatrix4fv(location, 1, transpose, value.val.ptr);
+        glUniformMatrix4fv(location, 1, transpose, &value.m00);
     }
     public void setUniformMat4(int location, Mat4 value, bool transpose = false)
     {
         checkManaged();
-        glUniformMatrix4fv(location, 1, transpose, value.val.ptr);
+        glUniformMatrix4fv(location, 1, transpose, &value.m00);
     }
 
+    void print(in Mat4 value)
+    {
+        writeln("\tm00: ", value.m00);
+        writeln("\tm10: ", value.m10);
+        writeln("\tm20: ", value.m20);
+        writeln("\tm30: ", value.m30);
+        writeln("\tm01: ", value.m01);
+        writeln("\tm11: ", value.m11);
+        writeln("\tm21: ", value.m21);
+        writeln("\tm31: ", value.m31);
+        writeln("\tm02: ", value.m02);
+        writeln("\tm12: ", value.m12);
+        writeln("\tm22: ", value.m22);
+        writeln("\tm32: ", value.m32);
+        writeln("\tm03: ", value.m03);
+        writeln("\tm13: ", value.m13);
+        writeln("\tm23: ", value.m23);
+        writeln("\tm33: ", value.m33);
+    }
+
+    int a = 0;
     public void setUniformMat4Array(string name, int count, ref Mat4[] value, bool transpose = false)
     {
-        checkManaged();
-        int location = fetchUniformLocation(name);
-        glUniformMatrix4fv(location, count, transpose, cast(const(float)*) value.ptr);
-    }
+        //for (int i = 0; i < value.length; i++)
+        //{
+        //    writeln(i);
+        //    print(value[i]);
+        //}
+        //a++;
+        //if (a == 5)
+        //    throw new Exception("stop");
 
-    public void setUniformVec4(string name, Vec4 value)
-    {
+
         checkManaged();
         int location = fetchUniformLocation(name);
-        glUniform4f(location, value.x, value.y, value.z, value.w);
+
+        glUniformMatrix4fv(location, count, transpose, &value[0].m00);
     }
 
     public void setUniform4f(string name, float a, float b, float c, float d)

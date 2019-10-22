@@ -10,7 +10,7 @@ import arc.core;
 import arc.engine;
 import arc.input;
 import arc.math;
-import arc.gfx.shader;
+import arc.gfx.shader_program;
 import arc.gfx.buffers;
 import arc.gfx.mesh;
 import arc.gfx.texture;

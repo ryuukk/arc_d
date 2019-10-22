@@ -83,9 +83,22 @@ public struct Vec3
 
     public Vec3 mul(in Mat4 m)
     {
-        return Vec3(x * m.val[Mat4.M00] + y * m.val[Mat4.M01] + z * m.val[Mat4.M02] + m.val[Mat4.M03], x
-			* m.val[Mat4.M10] + y * m.val[Mat4.M11] + z * m.val[Mat4.M12] + m.val[Mat4.M13], x * m.val[Mat4.M20] + y
-			* m.val[Mat4.M21] + z * m.val[Mat4.M22] + m.val[Mat4.M23]);
+        return Vec3(x * m.m00+ y * m.m01+ z * m.m02+ m.m03, x
+			* m.m10+ y * m.m11+ z * m.m12+ m.m13, x * m.m20+ y
+			* m.m21+ z * m.m22+ m.m23);
+    }
+
+    public void prj(Mat4 matrix)
+    {
+        auto l_w = 1f / (x * matrix.m30 + y * matrix.m31 + z * matrix.m32 + matrix.m33);
+
+        auto cpy_x = (x * matrix.m00 + y * matrix.m01 + z * matrix.m02 + matrix.m03) * l_w;
+        auto cpy_y = (x * matrix.m10 + y * matrix.m11 + z * matrix.m12 + matrix.m13) * l_w;
+        auto cpy_z = (x * matrix.m20 + y * matrix.m21 + z * matrix.m22 + matrix.m23) * l_w;
+
+        this.x = cpy_x;
+        this.y = cpy_y;
+        this.z = cpy_z;
     }
 
     public bool isZero()
@@ -188,43 +201,22 @@ public struct Vec3
     public static Vec3 rotate(in Vec3 lhs, in Vec3 axis, float angle)
     {
         auto rotation = Quat.fromAxis(axis, angle);
-        auto matrix = Mat4.identity; matrix.set(0, 0, 0, rotation.x, rotation.y, rotation.z, rotation.w);
+        auto matrix = Mat4.set(0, 0, 0, rotation.x, rotation.y, rotation.z, rotation.w);
 
         return transform(lhs, matrix);
     }
 
     public static Vec3 transform(in Vec3 lhs, in Mat4 matrix)
     {
+        float inv_w = 1.0f / (lhs.x * matrix.m30+ lhs.y * matrix.m31+ lhs.z * matrix.m32+ matrix.m33);
         Vec3 ret;
-        ret.x = lhs.x * matrix.val[Mat4.M00] + lhs.y * matrix.val[Mat4.M01] + lhs.z * matrix.val[Mat4.M02] + matrix.val[Mat4.M03];
-        ret.y = lhs.x * matrix.val[Mat4.M10] + lhs.y * matrix.val[Mat4.M11] + lhs.z * matrix.val[Mat4.M12] + matrix.val[Mat4.M13];
-        ret.z = lhs.x * matrix.val[Mat4.M20] + lhs.y * matrix.val[Mat4.M21] + lhs.z * matrix.val[Mat4.M22] + matrix.val[Mat4.M23];
+        ret.x = (lhs.x * matrix.m00+ lhs.y * matrix.m01+ lhs.z * matrix.m02+ matrix.m03) * inv_w;
+        ret.y = (lhs.x * matrix.m10+ lhs.y * matrix.m11+ lhs.z * matrix.m12+ matrix.m13) * inv_w;
+        ret.z = (lhs.x * matrix.m20+ lhs.y * matrix.m21+ lhs.z * matrix.m22+ matrix.m23) * inv_w;
         return ret;
     }
 }
 
-public struct Vec4
-{
-    private float[4] data;
-    public @property float x() {return data[0];}
-    public @property float y() {return data[1];}
-    public @property float z() {return data[2];}
-    public @property float w() {return data[3];}
-    
-    public @property float x(float value) {return data[0] = value;}
-    public @property float y(float value) {return data[1] = value;}
-    public @property float z(float value) {return data[2] = value;}
-    public @property float w(float value) {return data[3] = value;}
-    alias data this;
-
-    public this(float x, float y, float z, float w)
-    {
-        data[0] = x;
-        data[1] = y;
-        data[2] = z;
-        data[3] = w;
-    }
-}
 
 /*
 OPENGL is COLUMN MAJOR !!!!
@@ -253,283 +245,202 @@ public struct Mat4
     public static immutable int M31 = 7;
     public static immutable int M32 = 11;
     public static immutable int M33 = 15;
-    public float[16] val;
-
+    public float m00 = 0;
+    public float m10 = 0;
+    public float m20 = 0;
+    public float m30 = 0;
+    public float m01 = 0;
+    public float m11 = 0;
+    public float m21 = 0;
+    public float m31 = 0;
+    public float m02 = 0;
+    public float m12 = 0;
+    public float m22 = 0;
+    public float m32 = 0;
+    public float m03 = 0;
+    public float m13 = 0;
+    public float m23 = 0;
+    public float m33 = 0;
+        public this(float m00, float m01, float m02, float m03, float m04, float m05, float m06, float m07,
+            float m08, float m09,
+            float m10, float m11, float m12, float m13, float m14, float m15)
+        {
+            this.m00 = m00;
+            this.m10 = m01;
+            m20 = m02;
+            m30 = m03;
+            this.m01 = m04;
+            this.m11 = m05;
+            m21 = m06;
+            m31 = m07;
+            this.m02 = m08;
+            this.m12 = m09;
+            m22 = m10;
+            m32 = m11;
+            this.m03 = m12;
+            this.m13 = m13;
+            m23 = m14;
+            m33 = m15;
+        }
 
     public void print()
     {
         import std.stdio;
-        writeln("----");
-        writeln("----");
 
-        
-            writeln("m00: ", val[M00]);
-            writeln("m10: ", val[M10]);
-            writeln("m20: ", val[M20]);
-            writeln("m30: ", val[M30]);
-            writeln("m01: ", val[M01]);
-            writeln("m11: ", val[M11]);
-            writeln("m21: ", val[M21]);
-            writeln("m31: ", val[M31]);
-            writeln("m02: ", val[M02]);
-            writeln("m12: ", val[M12]);
-            writeln("m22: ", val[M22]);
-            writeln("m32: ", val[M32]);
-            writeln("m03: ", val[M03]);
-            writeln("m13: ", val[M13]);
-            writeln("m23: ", val[M23]);
-            writeln("m33: ", val[M33]);
-
-        writeln("----");
-        writeln("----");
-    }
-
-    public this(float m00, float m01, float m02, float m03, float m04, float m05, float m06, float m07, float m08, float m09,
-            float m10, float m11, float m12, float m13, float m14, float m15)
-    {
-       val[0] = m00; val[1] = m01;  val[2] = m02;  val[3] = m03;
-       val[4] = m04; val[5] = m05;  val[6] = m06;  val[7] = m07;
-       val[8] = m08; val[9] = m09;  val[10]= m10;  val[11]= m11;
-       val[12]= m12; val[13]= m13;  val[14]= m14;  val[15]= m15;
+        writeln("m00: ", m00);
+        writeln("m10: ", m10);
+        writeln("m20: ", m20);
+        writeln("m30: ", m30);
+        writeln("m01: ", m01);
+        writeln("m11: ", m11);
+        writeln("m21: ", m21);
+        writeln("m31: ", m31);
+        writeln("m02: ", m02);
+        writeln("m12: ", m12);
+        writeln("m22: ", m22);
+        writeln("m32: ", m32);
+        writeln("m03: ", m03);
+        writeln("m13: ", m13);
+        writeln("m23: ", m23);
+        writeln("m33: ", m33);
     }
 
     public static Mat4 identity()
     {
         auto ret = Mat4();
-        ret.val[M00] = 1f;
-        ret.val[M01] = 0f;
-        ret.val[M02] = 0f;
-        ret.val[M03] = 0f;
-        ret.val[M10] = 0f;
-        ret.val[M11] = 1f;
-        ret.val[M12] = 0f;
-        ret.val[M13] = 0f;
-        ret.val[M20] = 0f;
-        ret.val[M21] = 0f;
-        ret.val[M22] = 1f;
-        ret.val[M23] = 0f;
-        ret.val[M30] = 0f;
-        ret.val[M31] = 0f;
-        ret.val[M32] = 0f;
-        ret.val[M33] = 1f;
+        ret.m00= 1f;
+        ret.m01= 0f;
+        ret.m02= 0f;
+        ret.m03= 0f;
+        ret.m10= 0f;
+        ret.m11= 1f;
+        ret.m12= 0f;
+        ret.m13= 0f;
+        ret.m20= 0f;
+        ret.m21= 0f;
+        ret.m22= 1f;
+        ret.m23= 0f;
+        ret.m30= 0f;
+        ret.m31= 0f;
+        ret.m32= 0f;
+        ret.m33= 1f;
         return ret;
     }
 
     public ref Mat4 idt()
     {
-        val[M00] = 1f;
-        val[M01] = 0f;
-        val[M02] = 0f;
-        val[M03] = 0f;
-        val[M10] = 0f;
-        val[M11] = 1f;
-        val[M12] = 0f;
-        val[M13] = 0f;
-        val[M20] = 0f;
-        val[M21] = 0f;
-        val[M22] = 1f;
-        val[M23] = 0f;
-        val[M30] = 0f;
-        val[M31] = 0f;
-        val[M32] = 0f;
-        val[M33] = 1f;
+        m00= 1f;
+        m01= 0f;
+        m02= 0f;
+        m03= 0f;
+        m10= 0f;
+        m11= 1f;
+        m12= 0f;
+        m13= 0f;
+        m20= 0f;
+        m21= 0f;
+        m22= 1f;
+        m23= 0f;
+        m30= 0f;
+        m31= 0f;
+        m32= 0f;
+        m33= 1f;
         return this;
     }
 
     public static Mat4 inv(in Mat4 mat)
     {
-		float l_det = mat.val[M30] * mat.val[M21] * mat.val[M12] * mat.val[M03] - mat.val[M20] * mat.val[M31] * mat.val[M12] * mat.val[M03] - mat.val[M30] * mat.val[M11]
-			* mat.val[M22] * mat.val[M03] + mat.val[M10] * mat.val[M31] * mat.val[M22] * mat.val[M03] + mat.val[M20] * mat.val[M11] * mat.val[M32] * mat.val[M03] - mat.val[M10]
-			* mat.val[M21] * mat.val[M32] * mat.val[M03] - mat.val[M30] * mat.val[M21] * mat.val[M02] * mat.val[M13] + mat.val[M20] * mat.val[M31] * mat.val[M02] * mat.val[M13]
-			+ mat.val[M30] * mat.val[M01] * mat.val[M22] * mat.val[M13] - mat.val[M00] * mat.val[M31] * mat.val[M22] * mat.val[M13] - mat.val[M20] * mat.val[M01] * mat.val[M32]
-			* mat.val[M13] + mat.val[M00] * mat.val[M21] * mat.val[M32] * mat.val[M13] + mat.val[M30] * mat.val[M11] * mat.val[M02] * mat.val[M23] - mat.val[M10] * mat.val[M31]
-			* mat.val[M02] * mat.val[M23] - mat.val[M30] * mat.val[M01] * mat.val[M12] * mat.val[M23] + mat.val[M00] * mat.val[M31] * mat.val[M12] * mat.val[M23] + mat.val[M10]
-			* mat.val[M01] * mat.val[M32] * mat.val[M23] - mat.val[M00] * mat.val[M11] * mat.val[M32] * mat.val[M23] - mat.val[M20] * mat.val[M11] * mat.val[M02] * mat.val[M33]
-			+ mat.val[M10] * mat.val[M21] * mat.val[M02] * mat.val[M33] + mat.val[M20] * mat.val[M01] * mat.val[M12] * mat.val[M33] - mat.val[M00] * mat.val[M21] * mat.val[M12]
-			* mat.val[M33] - mat.val[M10] * mat.val[M01] * mat.val[M22] * mat.val[M33] + mat.val[M00] * mat.val[M11] * mat.val[M22] * mat.val[M33];
-		if (l_det == 0f) throw new Exception("non-invertible matrix");
-		float inv_det = 1.0f / l_det;
+        float lDet = mat.m30 * mat.m21 * mat.m12 * mat.m03 - mat.m20 * mat.m31
+            * mat.m12 * mat.m03 - mat.m30 * mat.m11 * mat.m22 * mat.m03 + mat.m10
+            * mat.m31 * mat.m22 * mat.m03 + mat.m20 * mat.m11 * mat.m32 * mat.m03
+            - mat.m10 * mat.m21 * mat.m32 * mat.m03 - mat.m30 * mat.m21 * mat.m02
+            * mat.m13 + mat.m20 * mat.m31 * mat.m02 * mat.m13 + mat.m30 * mat.m01
+            * mat.m22 * mat.m13 - mat.m00 * mat.m31 * mat.m22 * mat.m13 - mat.m20
+            * mat.m01 * mat.m32 * mat.m13 + mat.m00 * mat.m21 * mat.m32 * mat.m13
+            + mat.m30 * mat.m11 * mat.m02 * mat.m23 - mat.m10 * mat.m31 * mat.m02
+            * mat.m23 - mat.m30 * mat.m01 * mat.m12 * mat.m23 + mat.m00 * mat.m31
+            * mat.m12 * mat.m23 + mat.m10 * mat.m01 * mat.m32 * mat.m23 - mat.m00
+            * mat.m11 * mat.m32 * mat.m23 - mat.m20 * mat.m11 * mat.m02 * mat.m33
+            + mat.m10 * mat.m21 * mat.m02 * mat.m33 + mat.m20 * mat.m01 * mat.m12
+            * mat.m33 - mat.m00 * mat.m21 * mat.m12 * mat.m33 - mat.m10 * mat.m01
+            * mat.m22 * mat.m33 + mat.m00 * mat.m11 * mat.m22 * mat.m33;
+      if (lDet == 0.0f)
+            throw new Exception("non-invertible matrix");
+        float invDet = 1.0f / lDet;
         Mat4 tmp = Mat4.identity;
-		tmp.val[M00] = mat.val[M12] * mat.val[M23] * mat.val[M31] - mat.val[M13] * mat.val[M22] * mat.val[M31] + mat.val[M13] * mat.val[M21] * mat.val[M32] - mat.val[M11]
-			* mat.val[M23] * mat.val[M32] - mat.val[M12] * mat.val[M21] * mat.val[M33] + mat.val[M11] * mat.val[M22] * mat.val[M33];
-		tmp.val[M01] = mat.val[M03] * mat.val[M22] * mat.val[M31] - mat.val[M02] * mat.val[M23] * mat.val[M31] - mat.val[M03] * mat.val[M21] * mat.val[M32] + mat.val[M01]
-			* mat.val[M23] * mat.val[M32] + mat.val[M02] * mat.val[M21] * mat.val[M33] - mat.val[M01] * mat.val[M22] * mat.val[M33];
-		tmp.val[M02] = mat.val[M02] * mat.val[M13] * mat.val[M31] - mat.val[M03] * mat.val[M12] * mat.val[M31] + mat.val[M03] * mat.val[M11] * mat.val[M32] - mat.val[M01]
-			* mat.val[M13] * mat.val[M32] - mat.val[M02] * mat.val[M11] * mat.val[M33] + mat.val[M01] * mat.val[M12] * mat.val[M33];
-		tmp.val[M03] = mat.val[M03] * mat.val[M12] * mat.val[M21] - mat.val[M02] * mat.val[M13] * mat.val[M21] - mat.val[M03] * mat.val[M11] * mat.val[M22] + mat.val[M01]
-			* mat.val[M13] * mat.val[M22] + mat.val[M02] * mat.val[M11] * mat.val[M23] - mat.val[M01] * mat.val[M12] * mat.val[M23];
-		tmp.val[M10] = mat.val[M13] * mat.val[M22] * mat.val[M30] - mat.val[M12] * mat.val[M23] * mat.val[M30] - mat.val[M13] * mat.val[M20] * mat.val[M32] + mat.val[M10]
-			* mat.val[M23] * mat.val[M32] + mat.val[M12] * mat.val[M20] * mat.val[M33] - mat.val[M10] * mat.val[M22] * mat.val[M33];
-		tmp.val[M11] = mat.val[M02] * mat.val[M23] * mat.val[M30] - mat.val[M03] * mat.val[M22] * mat.val[M30] + mat.val[M03] * mat.val[M20] * mat.val[M32] - mat.val[M00]
-			* mat.val[M23] * mat.val[M32] - mat.val[M02] * mat.val[M20] * mat.val[M33] + mat.val[M00] * mat.val[M22] * mat.val[M33];
-		tmp.val[M12] = mat.val[M03] * mat.val[M12] * mat.val[M30] - mat.val[M02] * mat.val[M13] * mat.val[M30] - mat.val[M03] * mat.val[M10] * mat.val[M32] + mat.val[M00]
-			* mat.val[M13] * mat.val[M32] + mat.val[M02] * mat.val[M10] * mat.val[M33] - mat.val[M00] * mat.val[M12] * mat.val[M33];
-		tmp.val[M13] = mat.val[M02] * mat.val[M13] * mat.val[M20] - mat.val[M03] * mat.val[M12] * mat.val[M20] + mat.val[M03] * mat.val[M10] * mat.val[M22] - mat.val[M00]
-			* mat.val[M13] * mat.val[M22] - mat.val[M02] * mat.val[M10] * mat.val[M23] + mat.val[M00] * mat.val[M12] * mat.val[M23];
-		tmp.val[M20] = mat.val[M11] * mat.val[M23] * mat.val[M30] - mat.val[M13] * mat.val[M21] * mat.val[M30] + mat.val[M13] * mat.val[M20] * mat.val[M31] - mat.val[M10]
-			* mat.val[M23] * mat.val[M31] - mat.val[M11] * mat.val[M20] * mat.val[M33] + mat.val[M10] * mat.val[M21] * mat.val[M33];
-		tmp.val[M21] = mat.val[M03] * mat.val[M21] * mat.val[M30] - mat.val[M01] * mat.val[M23] * mat.val[M30] - mat.val[M03] * mat.val[M20] * mat.val[M31] + mat.val[M00]
-			* mat.val[M23] * mat.val[M31] + mat.val[M01] * mat.val[M20] * mat.val[M33] - mat.val[M00] * mat.val[M21] * mat.val[M33];
-		tmp.val[M22] = mat.val[M01] * mat.val[M13] * mat.val[M30] - mat.val[M03] * mat.val[M11] * mat.val[M30] + mat.val[M03] * mat.val[M10] * mat.val[M31] - mat.val[M00]
-			* mat.val[M13] * mat.val[M31] - mat.val[M01] * mat.val[M10] * mat.val[M33] + mat.val[M00] * mat.val[M11] * mat.val[M33];
-		tmp.val[M23] = mat.val[M03] * mat.val[M11] * mat.val[M20] - mat.val[M01] * mat.val[M13] * mat.val[M20] - mat.val[M03] * mat.val[M10] * mat.val[M21] + mat.val[M00]
-			* mat.val[M13] * mat.val[M21] + mat.val[M01] * mat.val[M10] * mat.val[M23] - mat.val[M00] * mat.val[M11] * mat.val[M23];
-		tmp.val[M30] = mat.val[M12] * mat.val[M21] * mat.val[M30] - mat.val[M11] * mat.val[M22] * mat.val[M30] - mat.val[M12] * mat.val[M20] * mat.val[M31] + mat.val[M10]
-			* mat.val[M22] * mat.val[M31] + mat.val[M11] * mat.val[M20] * mat.val[M32] - mat.val[M10] * mat.val[M21] * mat.val[M32];
-		tmp.val[M31] = mat.val[M01] * mat.val[M22] * mat.val[M30] - mat.val[M02] * mat.val[M21] * mat.val[M30] + mat.val[M02] * mat.val[M20] * mat.val[M31] - mat.val[M00]
-			* mat.val[M22] * mat.val[M31] - mat.val[M01] * mat.val[M20] * mat.val[M32] + mat.val[M00] * mat.val[M21] * mat.val[M32];
-		tmp.val[M32] = mat.val[M02] * mat.val[M11] * mat.val[M30] - mat.val[M01] * mat.val[M12] * mat.val[M30] - mat.val[M02] * mat.val[M10] * mat.val[M31] + mat.val[M00]
-			* mat.val[M12] * mat.val[M31] + mat.val[M01] * mat.val[M10] * mat.val[M32] - mat.val[M00] * mat.val[M11] * mat.val[M32];
-		tmp.val[M33] = mat.val[M01] * mat.val[M12] * mat.val[M20] - mat.val[M02] * mat.val[M11] * mat.val[M20] + mat.val[M02] * mat.val[M10] * mat.val[M21] - mat.val[M00]
-			* mat.val[M12] * mat.val[M21] - mat.val[M01] * mat.val[M10] * mat.val[M22] + mat.val[M00] * mat.val[M11] * mat.val[M22];
-		tmp.val[M00] = tmp.val[M00] * inv_det;
-		tmp.val[M01] = tmp.val[M01] * inv_det;
-		tmp.val[M02] = tmp.val[M02] * inv_det;
-		tmp.val[M03] = tmp.val[M03] * inv_det;
-		tmp.val[M10] = tmp.val[M10] * inv_det;
-		tmp.val[M11] = tmp.val[M11] * inv_det;
-		tmp.val[M12] = tmp.val[M12] * inv_det;
-		tmp.val[M13] = tmp.val[M13] * inv_det;
-		tmp.val[M20] = tmp.val[M20] * inv_det;
-		tmp.val[M21] = tmp.val[M21] * inv_det;
-		tmp.val[M22] = tmp.val[M22] * inv_det;
-		tmp.val[M23] = tmp.val[M23] * inv_det;
-		tmp.val[M30] = tmp.val[M30] * inv_det;
-		tmp.val[M31] = tmp.val[M31] * inv_det;
-		tmp.val[M32] = tmp.val[M32] * inv_det;
-		tmp.val[M33] = tmp.val[M33] * inv_det;
+        tmp.m00 = mat.m12 * mat.m23 * mat.m31 - mat.m13 * mat.m22 * mat.m31
+            + mat.m13 * mat.m21 * mat.m32 - mat.m11 * mat.m23 * mat.m32 - mat.m12
+            * mat.m21 * mat.m33 + mat.m11 * mat.m22 * mat.m33;
+        tmp.m01 = mat.m03 * mat.m22 * mat.m31 - mat.m02 * mat.m23 * mat.m31
+            - mat.m03 * mat.m21 * mat.m32 + mat.m01 * mat.m23 * mat.m32 + mat.m02
+            * mat.m21 * mat.m33 - mat.m01 * mat.m22 * mat.m33;
+        tmp.m02 = mat.m02 * mat.m13 * mat.m31 - mat.m03 * mat.m12 * mat.m31
+            + mat.m03 * mat.m11 * mat.m32 - mat.m01 * mat.m13 * mat.m32 - mat.m02
+            * mat.m11 * mat.m33 + mat.m01 * mat.m12 * mat.m33;
+        tmp.m03 = mat.m03 * mat.m12 * mat.m21 - mat.m02 * mat.m13 * mat.m21
+            - mat.m03 * mat.m11 * mat.m22 + mat.m01 * mat.m13 * mat.m22 + mat.m02
+            * mat.m11 * mat.m23 - mat.m01 * mat.m12 * mat.m23;
+        tmp.m10 = mat.m13 * mat.m22 * mat.m30 - mat.m12 * mat.m23 * mat.m30
+            - mat.m13 * mat.m20 * mat.m32 + mat.m10 * mat.m23 * mat.m32 + mat.m12
+            * mat.m20 * mat.m33 - mat.m10 * mat.m22 * mat.m33;
+        tmp.m11 = mat.m02 * mat.m23 * mat.m30 - mat.m03 * mat.m22 * mat.m30
+            + mat.m03 * mat.m20 * mat.m32 - mat.m00 * mat.m23 * mat.m32 - mat.m02
+            * mat.m20 * mat.m33 + mat.m00 * mat.m22 * mat.m33;
+        tmp.m12 = mat.m03 * mat.m12 * mat.m30 - mat.m02 * mat.m13 * mat.m30
+            - mat.m03 * mat.m10 * mat.m32 + mat.m00 * mat.m13 * mat.m32 + mat.m02
+            * mat.m10 * mat.m33 - mat.m00 * mat.m12 * mat.m33;
+        tmp.m13 = mat.m02 * mat.m13 * mat.m20 - mat.m03 * mat.m12 * mat.m20
+            + mat.m03 * mat.m10 * mat.m22 - mat.m00 * mat.m13 * mat.m22 - mat.m02
+            * mat.m10 * mat.m23 + mat.m00 * mat.m12 * mat.m23;
+        tmp.m20 = mat.m11 * mat.m23 * mat.m30 - mat.m13 * mat.m21 * mat.m30
+            + mat.m13 * mat.m20 * mat.m31 - mat.m10 * mat.m23 * mat.m31 - mat.m11
+            * mat.m20 * mat.m33 + mat.m10 * mat.m21 * mat.m33;
+        tmp.m21 = mat.m03 * mat.m21 * mat.m30 - mat.m01 * mat.m23 * mat.m30
+            - mat.m03 * mat.m20 * mat.m31 + mat.m00 * mat.m23 * mat.m31 + mat.m01
+            * mat.m20 * mat.m33 - mat.m00 * mat.m21 * mat.m33;
+        tmp.m22 = mat.m01 * mat.m13 * mat.m30 - mat.m03 * mat.m11 * mat.m30
+            + mat.m03 * mat.m10 * mat.m31 - mat.m00 * mat.m13 * mat.m31 - mat.m01
+            * mat.m10 * mat.m33 + mat.m00 * mat.m11 * mat.m33;
+        tmp.m23 = mat.m03 * mat.m11 * mat.m20 - mat.m01 * mat.m13 * mat.m20
+            - mat.m03 * mat.m10 * mat.m21 + mat.m00 * mat.m13 * mat.m21 + mat.m01
+            * mat.m10 * mat.m23 - mat.m00 * mat.m11 * mat.m23;
+        tmp.m30 = mat.m12 * mat.m21 * mat.m30 - mat.m11 * mat.m22 * mat.m30
+            - mat.m12 * mat.m20 * mat.m31 + mat.m10 * mat.m22 * mat.m31 + mat.m11
+            * mat.m20 * mat.m32 - mat.m10 * mat.m21 * mat.m32;
+        tmp.m31 = mat.m01 * mat.m22 * mat.m30 - mat.m02 * mat.m21 * mat.m30
+            + mat.m02 * mat.m20 * mat.m31 - mat.m00 * mat.m22 * mat.m31 - mat.m01
+            * mat.m20 * mat.m32 + mat.m00 * mat.m21 * mat.m32;
+        tmp.m32 = mat.m02 * mat.m11 * mat.m30 - mat.m01 * mat.m12 * mat.m30
+            - mat.m02 * mat.m10 * mat.m31 + mat.m00 * mat.m12 * mat.m31 + mat.m01
+            * mat.m10 * mat.m32 - mat.m00 * mat.m11 * mat.m32;
+        tmp.m33 = mat.m01 * mat.m12 * mat.m20 - mat.m02 * mat.m11 * mat.m20
+            + mat.m02 * mat.m10 * mat.m21 - mat.m00 * mat.m12 * mat.m21 - mat.m01
+            * mat.m10 * mat.m22 + mat.m00 * mat.m11 * mat.m22;
+
+        tmp.m00 = tmp.m00 * invDet;
+        tmp.m01 = tmp.m01 * invDet;
+        tmp.m02 = tmp.m02 * invDet;
+        tmp.m03 = tmp.m03 * invDet;
+        tmp.m10 = tmp.m10 * invDet;
+        tmp.m11 = tmp.m11 * invDet;
+        tmp.m12 = tmp.m12 * invDet;
+        tmp.m13 = tmp.m13 * invDet;
+        tmp.m20 = tmp.m20 * invDet;
+        tmp.m21 = tmp.m21 * invDet;
+        tmp.m22 = tmp.m22 * invDet;
+        tmp.m23 = tmp.m23 * invDet;
+        tmp.m30 = tmp.m30 * invDet;
+        tmp.m31 = tmp.m31 * invDet;
+        tmp.m32 = tmp.m32 * invDet;
+        tmp.m33 = tmp.m33 * invDet;
 		return tmp;
 	}
 
     public float det3x3() 
     {
-		return val[M00] * val[M11] * val[M22] + val[M01] * val[M12] * val[M20] + val[M02] * val[M10] * val[M21] - val[M00]
-			* val[M12] * val[M21] - val[M01] * val[M10] * val[M22] - val[M02] * val[M11] * val[M20];
+		return m00* m11* m22+ m01* m12* m20+ m02* m10* m21- m00
+			* m12* m21- m01* m10* m22- m02* m11* m20;
 	}
-
-    public void rotate(float angle, float x, float y, float z)
-    {
-        import  std.algorithm.comparison: clamp;
-        
-        float c = cos(angle * DEG2RAD); // cosine
-        float s = sin(angle * DEG2RAD); // sine
-        float c1 = 1.0f - c; // 1 - c
-        float m0 = val[0], m4 = val[4], m8 = val[8], m12 = val[12], m1 = val[1], m5 = val[5], m9 = val[9], m13 = val[13], m2 = val[
-        2], m6 = val[6], m10 = val[10], m14 = val[14];
-
-        // build rotation matrix
-        float r0 =  clamp( x * x * c1 + c    , -1, 1);
-        float r1 =  clamp( x * y * c1 + z * s, -1, 1);
-        float r2 =  clamp( x * z * c1 - y * s, -1, 1);
-        float r4 =  clamp( x * y * c1 - z * s, -1, 1);
-        float r5 =  clamp( y * y * c1 + c    , -1, 1);
-        float r6 =  clamp( y * z * c1 + x * s, -1, 1);
-        float r8 =  clamp( x * z * c1 + y * s, -1, 1);
-        float r9 =  clamp( y * z * c1 - x * s, -1, 1);
-        float r10 = clamp( z * z * c1 + c    , -1, 1);
-
-        // multiply rotation matrix
-
-        val[0] =   (r0 * m0 + r4 * m1 + r8 *  m2   );
-        val[1] =   (r1 * m0 + r5 * m1 + r9 *  m2   );
-        val[2] =   (r2 * m0 + r6 * m1 + r10 * m2   );
-        val[4] =   (r0 * m4 + r4 * m5 + r8 *  m6   );
-        val[5] =   (r1 * m4 + r5 * m5 + r9 *  m6   );
-        val[6] =   (r2 * m4 + r6 * m5 + r10 * m6   );
-        val[8] =   (r0 * m8 + r4 * m9 + r8 *  m10  );
-        val[9] =   (r1 * m8 + r5 * m9 + r9 *  m10  );
-        val[10] =  (r2 * m8 + r6 * m9 + r10 * m10  );
-        val[12] =  (r0 * m12 + r4 * m13 + r8 * m14 );
-        val[13] =  (r1 * m12 + r5 * m13 + r9 * m14 );
-        val[14] =  (r2 * m12 + r6 * m13 + r10 * m14);
-
-    }
-
-    public void set(float translationX, float translationY, float translationZ, float quaternionX, float quaternionY, float quaternionZ,
-            float quaternionW)
-    {
-        float xs = quaternionX * 2f, ys = quaternionY * 2f, zs = quaternionZ * 2f;
-        float wx = quaternionW * xs, wy = quaternionW * ys, wz = quaternionW * zs;
-        float xx = quaternionX * xs, xy = quaternionX * ys, xz = quaternionX * zs;
-        float yy = quaternionY * ys, yz = quaternionY * zs, zz = quaternionZ * zs;
-
-        val[M00] = (1.0f - (yy + zz));
-        val[M01] = (xy - wz);
-        val[M02] = (xz + wy);
-        val[M03] = translationX;
-
-        val[M10] = (xy + wz);
-        val[M11] = (1.0f - (xx + zz));
-        val[M12] = (yz - wx);
-        val[M13] = translationY;
-
-        val[M20] = (xz - wy);
-        val[M21] = (yz + wx);
-        val[M22] = (1.0f - (xx + yy));
-        val[M23] = translationZ;
-
-        val[M30] = 0.0f;
-        val[M31] = 0.0f;
-        val[M32] = 0.0f;
-        val[M33] = 1.0f;
-    }
-
-    public void set(Vec3 translation, Quat quat)
-    {
-        float xs = quat.x * 2f, ys = quat.y * 2f, zs = quat.z * 2f;
-        float wx = quat.w * xs, wy = quat.w * ys, wz = quat.w * zs;
-        float xx = quat.x * xs, xy = quat.x * ys, xz = quat.x * zs;
-        float yy = quat.y * ys, yz = quat.y * zs, zz = quat.z * zs;
-
-        val[M00] = (1.0f - (yy + zz));
-        val[M01] = (xy - wz);
-        val[M02] = (xz + wy);
-        val[M03] = translation.x;
-
-        val[M10] = (xy + wz);
-        val[M11] = (1.0f - (xx + zz));
-        val[M12] = (yz - wx);
-        val[M13] = translation.y;
-
-        val[M20] = (xz - wy);
-        val[M21] = (yz + wx);
-        val[M22] = (1.0f - (xx + yy));
-        val[M23] = translation.z;
-
-        val[M30] = 0.0f;
-        val[M31] = 0.0f;
-        val[M32] = 0.0f;
-        val[M33] = 1.0f;
-    }
-
-    public void set(float translationX, float translationY, float translationZ, float quaternionX, float quaternionY, float quaternionZ,
-            float quaternionW, float scaleX, float scaleY, float scaleZ)
-    {
-        float xs = quaternionX * 2f, ys = quaternionY * 2f, zs = quaternionZ * 2f;
-        float wx = quaternionW * xs, wy = quaternionW * ys, wz = quaternionW * zs;
-        float xx = quaternionX * xs, xy = quaternionX * ys, xz = quaternionX * zs;
-        float yy = quaternionY * ys, yz = quaternionY * zs, zz = quaternionZ * zs;
-
-        val[M00] = scaleX * (1.0f - (yy + zz));
-        val[M01] = scaleY * (xy - wz);
-        val[M02] = scaleZ * (xz + wy);
-        val[M03] = translationX;
-
-        val[M10] = scaleX * (xy + wz);
-        val[M11] = scaleY * (1.0f - (xx + zz));
-        val[M12] = scaleZ * (yz - wx);
-        val[M13] = translationY;
-
-        val[M20] = scaleX * (xz - wy);
-        val[M21] = scaleY * (yz + wx);
-        val[M22] = scaleZ * (1.0f - (xx + yy));
-        val[M23] = translationZ;
-
-        val[M30] = 0.0f;
-        val[M31] = 0.0f;
-        val[M32] = 0.0f;
-        val[M33] = 1.0f;
-    }
 
     public static Mat4 createOrthographicOffCenter(float x, float y, float width, float height)
     {
@@ -548,22 +459,22 @@ public struct Mat4
         float ty = -(top + bottom) / (top - bottom);
         float tz = -(far + near) / (far - near);
 
-        ret.val[M00] = x_orth;
-        ret.val[M10] = 0;
-        ret.val[M20] = 0;
-        ret.val[M30] = 0;
-        ret.val[M01] = 0;
-        ret.val[M11] = y_orth;
-        ret.val[M21] = 0;
-        ret.val[M31] = 0;
-        ret.val[M02] = 0;
-        ret.val[M12] = 0;
-        ret.val[M22] = z_orth;
-        ret.val[M32] = 0;
-        ret.val[M03] = tx;
-        ret.val[M13] = ty;
-        ret.val[M23] = tz;
-        ret.val[M33] = 1;
+        ret.m00= x_orth;
+        ret.m10= 0;
+        ret.m20= 0;
+        ret.m30= 0;
+        ret.m01= 0;
+        ret.m11= y_orth;
+        ret.m21= 0;
+        ret.m31= 0;
+        ret.m02= 0;
+        ret.m12= 0;
+        ret.m22= z_orth;
+        ret.m32= 0;
+        ret.m03= tx;
+        ret.m13= ty;
+        ret.m23= tz;
+        ret.m33= 1;
 
         return ret;
     }
@@ -582,28 +493,39 @@ public struct Mat4
     public static Mat4 createTranslation(float x, float y, float z)
     {
         auto ret = Mat4.identity();
-		ret.val[M03] = x;
-		ret.val[M13] = y;
-		ret.val[M23] = z;
+		ret.m03= x;
+		ret.m13= y;
+		ret.m23= z;
         return ret;
     }
 
+
+
     public static Mat4 createRotation(Vec3 axis, float degrees)
     {
-        if(degrees == 0)
-            return Mat4.identity();
-
-        // todo: finish
-        return Mat4();
+        throw new Exception("not impl");
     }
 
     
-    public static Mat4 createScale(float x, float y, float z)
+    public static Mat4 createScale(Vec3 scale)
     {
         auto ret = Mat4.identity;
-		ret.val[M00] = x;
-		ret.val[M11] = y;
-		ret.val[M22] = z;
+        ret.m00 = scale.x;
+        ret.m01 = 0;
+        ret.m02 = 0;
+        ret.m03 = 0;
+        ret.m10 = 0;
+        ret.m11 = scale.y;
+        ret.m12 = 0;
+        ret.m13 = 0;
+        ret.m20 = 0;
+        ret.m21 = 0;
+        ret.m22 = scale.z;
+        ret.m23 = 0;
+        ret.m30 = 0;
+        ret.m31 = 0;
+        ret.m32 = 0;
+        ret.m33 = 1;
         return ret;
     }
 
@@ -615,22 +537,22 @@ public struct Mat4
 		float l_fd = cast(float)(1.0 / tan((fovy * (PI / 180)) / 2.0));
 		float l_a1 = (far + near) / (near - far);
 		float l_a2 = (2 * far * near) / (near - far);
-		ret.val[M00] = l_fd / aspectRatio;
-		ret.val[M10] = 0;
-		ret.val[M20] = 0;
-		ret.val[M30] = 0;
-		ret.val[M01] = 0;
-		ret.val[M11] = l_fd;
-		ret.val[M21] = 0;
-		ret.val[M31] = 0;
-		ret.val[M02] = 0;
-		ret.val[M12] = 0;
-		ret.val[M22] = l_a1;
-		ret.val[M32] = -1;
-		ret.val[M03] = 0;
-		ret.val[M13] = 0;
-		ret.val[M23] = l_a2;
-		ret.val[M33] = 0;
+		ret.m00= l_fd / aspectRatio;
+		ret.m10= 0;
+		ret.m20= 0;
+		ret.m30= 0;
+		ret.m01= 0;
+		ret.m11= l_fd;
+		ret.m21= 0;
+		ret.m31= 0;
+		ret.m02= 0;
+		ret.m12= 0;
+		ret.m22= l_a1;
+		ret.m32= -1;
+		ret.m03= 0;
+		ret.m13= 0;
+		ret.m23= l_a2;
+		ret.m33= 0;
         return ret;
     }
 
@@ -643,35 +565,151 @@ public struct Mat4
         auto l_vey = l_vex.crs(l_vez).nor();
 
         auto ret = Mat4.identity();
-        ret.val[M00] = l_vex.x;
-        ret.val[M01] = l_vex.y;
-        ret.val[M02] = l_vex.z;
-        ret.val[M10] = l_vey.x;
-        ret.val[M11] = l_vey.y;
-        ret.val[M12] = l_vey.z;
-        ret.val[M20] = -l_vez.x;
-        ret.val[M21] = -l_vez.y;
-        ret.val[M22] = -l_vez.z;
+        ret.m00= l_vex.x;
+        ret.m01= l_vex.y;
+        ret.m02= l_vex.z;
+        ret.m10= l_vey.x;
+        ret.m11= l_vey.y;
+        ret.m12= l_vey.z;
+        ret.m20= -l_vez.x;
+        ret.m21= -l_vez.y;
+        ret.m22= -l_vez.z;
 
         return ret;
     }
+     public static Mat4 set(float translationX, float translationY, float translationZ, float quaternionX, float quaternionY, float quaternionZ, float quaternionW)
+        {
+            float xs = quaternionX * 2.0f, ys = quaternionY * 2.0f, zs = quaternionZ * 2.0f;
+            float wx = quaternionW * xs, wy = quaternionW * ys, wz = quaternionW * zs;
+            float xx = quaternionX * xs, xy = quaternionX * ys, xz = quaternionX * zs;
+            float yy = quaternionY * ys, yz = quaternionY * zs, zz = quaternionZ * zs;
 
-    Mat4 opBinary(string op)(Mat4 n)
+            Mat4 ret;
+            ret.m00 = (1.0f - (yy + zz));
+            ret.m01 = (xy - wz);
+            ret.m02 = (xz + wy);
+            ret.m03 = translationX;
+
+            ret.m10 = (xy + wz);
+            ret.m11 = (1.0f - (xx + zz));
+            ret.m12 = (yz - wx);
+            ret.m13 = translationY;
+
+            ret.m20 = (xz - wy);
+            ret.m21 = (yz + wx);
+            ret.m22 = (1.0f - (xx + yy));
+            ret.m23 = translationZ;
+
+            ret.m30 = 0.0f;
+            ret.m31 = 0.0f;
+            ret.m32 = 0.0f;
+            ret.m33 = 1.0f;
+            return ret;
+        }
+    
+    public static Mat4 set(in Vec3 translation, in Quat rotation, in Vec3 scale) {
+        float xs = rotation.x * 2.0f, ys = rotation.y * 2.0f, zs = rotation.z * 2.0f;
+        float wx = rotation.w * xs, wy = rotation.w * ys, wz = rotation.w * zs;
+        float xx = rotation.x * xs, xy = rotation.x * ys, xz = rotation.x * zs;
+        float yy = rotation.y * ys, yz = rotation.y * zs, zz = rotation.z * zs;
+
+        auto ret = Mat4.identity();
+        ret.m00 = scale.x * (1.0f - (yy + zz));
+        ret.m01 = scale.y * (xy - wz);
+        ret.m02 = scale.z * (xz + wy);
+        ret.m03 = translation.x;
+
+        ret.m10 = scale.x * (xy + wz);
+        ret.m11 = scale.y * (1.0f - (xx + zz));
+        ret.m12 = scale.z * (yz - wx);
+        ret.m13 = translation.y;
+
+        ret.m20 = scale.x * (xz - wy);
+        ret.m21 = scale.y * (yz + wx);
+        ret.m22 = scale.z * (1.0f - (xx + yy));
+        ret.m23 = translation.z;
+
+        ret.m30 = 0.0f;
+        ret.m31 = 0.0f;
+        ret.m32 = 0.0f;
+        ret.m33 = 1.0f;
+        return ret;
+    }
+
+    static Mat4 mult(in Mat4 lhs, in Mat4 rhs)
     {
-        static if (op == "+")
-            return Mat4();
-        else static if (op == "-")
-            return Mat4();
-        else static if (op == "*")
-            return Mat4(val[0]*n.val[0]  + val[4]*n.val[1]  + val[8]*n.val[2]  + val[12]*n.val[3],   val[1]*n.val[0]  + val[5]*n.val[1]  + val[9]*n.val[2]  + val[13]*n.val[3],   val[2]*n.val[0]  + val[6]*n.val[1]  + val[10]*n.val[2]  + val[14]*n.val[3],   val[3]*n.val[0]  + val[7]*n.val[1]  + val[11]*n.val[2]  + val[15]*n.val[3],
-                           val[0]*n.val[4]  + val[4]*n.val[5]  + val[8]*n.val[6]  + val[12]*n.val[7],   val[1]*n.val[4]  + val[5]*n.val[5]  + val[9]*n.val[6]  + val[13]*n.val[7],   val[2]*n.val[4]  + val[6]*n.val[5]  + val[10]*n.val[6]  + val[14]*n.val[7],   val[3]*n.val[4]  + val[7]*n.val[5]  + val[11]*n.val[6]  + val[15]*n.val[7],
-                           val[0]*n.val[8]  + val[4]*n.val[9]  + val[8]*n.val[10] + val[12]*n.val[11],  val[1]*n.val[8]  + val[5]*n.val[9]  + val[9]*n.val[10] + val[13]*n.val[11],  val[2]*n.val[8]  + val[6]*n.val[9]  + val[10]*n.val[10] + val[14]*n.val[11],  val[3]*n.val[8]  + val[7]*n.val[9]  + val[11]*n.val[10] + val[15]*n.val[11],
-                           val[0]*n.val[12] + val[4]*n.val[13] + val[8]*n.val[14] + val[12]*n.val[15],  val[1]*n.val[12] + val[5]*n.val[13] + val[9]*n.val[14] + val[13]*n.val[15],  val[2]*n.val[12] + val[6]*n.val[13] + val[10]*n.val[14] + val[14]*n.val[15],  val[3]*n.val[12] + val[7]*n.val[13] + val[11]*n.val[14] + val[15]*n.val[15]);
+           return Mat4(
+                lhs.m00 * rhs.m00 + lhs.m01 * rhs.m10 + lhs.m02 * rhs.m20 + lhs.m03 * rhs.m30,
+                lhs.m10 * rhs.m00 + lhs.m11 * rhs.m10 + lhs.m12 * rhs.m20 + lhs.m13 * rhs.m30,
+                lhs.m20 * rhs.m00 + lhs.m21 * rhs.m10 + lhs.m22 * rhs.m20 + lhs.m23 * rhs.m30,
+                lhs.m30 * rhs.m00 + lhs.m31 * rhs.m10 + lhs.m32 * rhs.m20 + lhs.m33 * rhs.m30,
+                
+                lhs.m00 * rhs.m01 + lhs.m01 * rhs.m11 + lhs.m02 * rhs.m21 + lhs.m03 * rhs.m31,
+                lhs.m10 * rhs.m01 + lhs.m11 * rhs.m11 + lhs.m12 * rhs.m21 + lhs.m13 * rhs.m31,
+                lhs.m20 * rhs.m01 + lhs.m21 * rhs.m11 + lhs.m22 * rhs.m21 + lhs.m23 * rhs.m31,
+                lhs.m30 * rhs.m01 + lhs.m31 * rhs.m11 + lhs.m32 * rhs.m21 + lhs.m33 * rhs.m31,
+                
+                lhs.m00 * rhs.m02 + lhs.m01 * rhs.m12 + lhs.m02 * rhs.m22 + lhs.m03 * rhs.m32,
+                lhs.m10 * rhs.m02 + lhs.m11 * rhs.m12 + lhs.m12 * rhs.m22 + lhs.m13 * rhs.m32,
+                lhs.m20 * rhs.m02 + lhs.m21 * rhs.m12 + lhs.m22 * rhs.m22 + lhs.m23 * rhs.m32,
+                lhs.m30 * rhs.m02 + lhs.m31 * rhs.m12 + lhs.m32 * rhs.m22 + lhs.m33 * rhs.m32,
+                
+                lhs.m00 * rhs.m03 + lhs.m01 * rhs.m13 + lhs.m02 * rhs.m23 + lhs.m03 * rhs.m33,
+                lhs.m10 * rhs.m03 + lhs.m11 * rhs.m13 + lhs.m12 * rhs.m23 + lhs.m13 * rhs.m33,
+                lhs.m20 * rhs.m03 + lhs.m21 * rhs.m13 + lhs.m22 * rhs.m23 + lhs.m23 * rhs.m33,
+                lhs.m30 * rhs.m03 + lhs.m31 * rhs.m13 + lhs.m32 * rhs.m23 + lhs.m33 * rhs.m33
+            );
+    }
 
-        else static if (op == "/")
-            return Mat4();
+    Mat4 opBinary(string op)(Mat4 rhs)
+    {
+        static if (op == "*")
+            return Mat4(
+                m00 * rhs.m00 + m01 * rhs.m10 + m02 * rhs.m20 + m03 * rhs.m30,
+                m10 * rhs.m00 + m11 * rhs.m10 + m12 * rhs.m20 + m13 * rhs.m30,
+                m20 * rhs.m00 + m21 * rhs.m10 + m22 * rhs.m20 + m23 * rhs.m30,
+                m30 * rhs.m00 + m31 * rhs.m10 + m32 * rhs.m20 + m33 * rhs.m30,
+                
+                m00 * rhs.m01 + m01 * rhs.m11 + m02 * rhs.m21 + m03 * rhs.m31,
+                m10 * rhs.m01 + m11 * rhs.m11 + m12 * rhs.m21 + m13 * rhs.m31,
+                m20 * rhs.m01 + m21 * rhs.m11 + m22 * rhs.m21 + m23 * rhs.m31,
+                m30 * rhs.m01 + m31 * rhs.m11 + m32 * rhs.m21 + m33 * rhs.m31,
+                
+                m00 * rhs.m02 + m01 * rhs.m12 + m02 * rhs.m22 + m03 * rhs.m32,
+                m10 * rhs.m02 + m11 * rhs.m12 + m12 * rhs.m22 + m13 * rhs.m32,
+                m20 * rhs.m02 + m21 * rhs.m12 + m22 * rhs.m22 + m23 * rhs.m32,
+                m30 * rhs.m02 + m31 * rhs.m12 + m32 * rhs.m22 + m33 * rhs.m32,
+                
+                m00 * rhs.m03 + m01 * rhs.m13 + m02 * rhs.m23 + m03 * rhs.m33,
+                m10 * rhs.m03 + m11 * rhs.m13 + m12 * rhs.m23 + m13 * rhs.m33,
+                m20 * rhs.m03 + m21 * rhs.m13 + m22 * rhs.m23 + m23 * rhs.m33,
+                m30 * rhs.m03 + m31 * rhs.m13 + m32 * rhs.m23 + m33 * rhs.m33
+                           );
         else
             static assert(0, "Operator " ~ op ~ " not implemented");
+    }
+
+    public static Mat4 multiply(in Mat4 lhs, in Mat4 rhs)
+    {
+        return Mat4(lhs.m00 * rhs.m00 + lhs.m01 * rhs.m10 + lhs.m02 * rhs.m20 + lhs.m03 * rhs.m30,
+                lhs.m10 * rhs.m00 + lhs.m11 * rhs.m10 + lhs.m12 * rhs.m20 + lhs.m13 * rhs.m30,
+                lhs.m20 * rhs.m00 + lhs.m21 * rhs.m10 + lhs.m22 * rhs.m20 + lhs.m23 * rhs.m30,
+                lhs.m30 * rhs.m00 + lhs.m31 * rhs.m10 + lhs.m32 * rhs.m20 + lhs.m33 * rhs.m30,
+
+                lhs.m00 * rhs.m01 + lhs.m01 * rhs.m11 + lhs.m02 * rhs.m21 + lhs.m03 * rhs.m31,
+                lhs.m10 * rhs.m01 + lhs.m11 * rhs.m11 + lhs.m12 * rhs.m21 + lhs.m13 * rhs.m31,
+                lhs.m20 * rhs.m01 + lhs.m21 * rhs.m11 + lhs.m22 * rhs.m21 + lhs.m23 * rhs.m31,
+                lhs.m30 * rhs.m01 + lhs.m31 * rhs.m11 + lhs.m32 * rhs.m21 + lhs.m33 * rhs.m31,
+
+                lhs.m00 * rhs.m02 + lhs.m01 * rhs.m12 + lhs.m02 * rhs.m22 + lhs.m03 * rhs.m32,
+                lhs.m10 * rhs.m02 + lhs.m11 * rhs.m12 + lhs.m12 * rhs.m22 + lhs.m13 * rhs.m32,
+                lhs.m20 * rhs.m02 + lhs.m21 * rhs.m12 + lhs.m22 * rhs.m22 + lhs.m23 * rhs.m32,
+                lhs.m30 * rhs.m02 + lhs.m31 * rhs.m12 + lhs.m32 * rhs.m22 + lhs.m33 * rhs.m32,
+
+                lhs.m00 * rhs.m03 + lhs.m01 * rhs.m13 + lhs.m02 * rhs.m23 + lhs.m03 * rhs.m33,
+                lhs.m10 * rhs.m03 + lhs.m11 * rhs.m13 + lhs.m12 * rhs.m23 + lhs.m13 * rhs.m33,
+                lhs.m20 * rhs.m03 + lhs.m21 * rhs.m13 + lhs.m22 * rhs.m23 + lhs.m23 * rhs.m33,
+                lhs.m30 * rhs.m03 + lhs.m31 * rhs.m13 + lhs.m32 * rhs.m23 + lhs.m33 * rhs.m33);
     }
 }
 
@@ -697,15 +735,11 @@ public struct Quat
 
     public ref Quat nor()
     {
-		float len = len2();
-		if (len != 0.0f && !isEqual(len, 1f))
-        {
-			len = sqrt(len);
-			w /= len;
-			x /= len;
-			y /= len;
-			z /= len;
-		}
+        float invMagnitude = 1f / cast(float) sqrt(x * x + y * y + z * z + w * w);
+        x *= invMagnitude;
+        y *= invMagnitude;
+        z *= invMagnitude;
+        w *= invMagnitude;
         return this;
     }
     
@@ -720,7 +754,11 @@ public struct Quat
 		float l_sin = sin(l_ang / 2);
 		float l_cos = cos(l_ang / 2);
 
-        return Quat(d * x * l_sin, d * y * l_sin, d * z * l_sin, l_cos).nor();
+        return Quat(
+            d * x * l_sin,
+             d * y * l_sin,
+              d * z * l_sin,
+               l_cos).nor();
     }
 
     public static Quat fromAxis(in Vec3 axis, float rad)

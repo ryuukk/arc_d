@@ -10,14 +10,14 @@ import arc.core;
 import arc.engine;
 import arc.input;
 import arc.math;
-import arc.gfx.shader;
+import arc.gfx.shader_program;
 import arc.gfx.buffers;
 import arc.gfx.mesh;
 import arc.gfx.texture;
 import arc.gfx.batch;
 import arc.gfx.camera;
 import arc.gfx.model;
-import arc.gfx.modelloader;
+import arc.gfx.model_loader;
 import arc.gfx.material;
 
 string vs = "
@@ -84,7 +84,7 @@ public class MyGame : IApp
         assert(_shader.isCompiled(), _shader.getLog());
 
 
-        auto data = loadModelData("data/character_male_0.g3dj");
+        auto data = loadModelData("data/knight.g3dj");
         assert(data !is null, "can't parse data");
 
         _model = new Model;
@@ -117,13 +117,14 @@ public class MyGame : IApp
         
         foreach(Mesh mesh; _model.meshes)
         {
-            //auto ta = _model.materials[0].get!TextureAttribute(TextureAttribute.diffuse);
-            //ta.textureDescriptor.texture.bind();
-            //_shader.setUniformi("u_texture", 0);
-            
+            if(_model.materials[0].has(TextureAttribute.diffuse))
+            {
+                auto ta = _model.materials[0].get!TextureAttribute(TextureAttribute.diffuse);
+                ta.descriptor.texture.bind();
+                _shader.setUniformi("u_texture", 0);
+            }
             mesh.render(_shader, GL_TRIANGLES);
         }
-
         _shader.end();
     }
 

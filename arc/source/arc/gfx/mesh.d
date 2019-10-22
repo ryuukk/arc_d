@@ -20,15 +20,12 @@ public class Mesh
 
     public this(bool isStatic, int maxVertices, int maxIndices, VertexAttribute[] attributes...)
     {
-        // todo: for the moment max vertices/indices have no effect, since when created, it'll use what ever length the vertices data will have
-        // this can be problematic since we can have dynamic meshes
-        // what if the new update is larger than what was used to create it ?
-        // i should define the max then check before uploading data
         _attributes = new VertexAttributes(attributes);
         _vertices = new VertexBuffer(isStatic, maxVertices, _attributes);
         _indices = new IndexBuffer(isStatic, maxIndices);
         _isVertexArray = false;
     }
+
     public this(bool isStatic, int maxVertices, int maxIndices, VertexAttributes attributes)
     {
         // todo: for the moment max vertices/indices have no effect, since when created, it'll use what ever length the vertices data will have
