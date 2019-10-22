@@ -66,6 +66,7 @@ public class MyGame : IApp
         _cam = new PerspectiveCamera(67, Core.graphics.getWidth(), Core.graphics.getHeight());
         _cam.near = 1f;
         _cam.far = 100f;
+        _cam.position = Vec3(0, 0, 5);
         _cam.update();
 
         _controller = new CameraController(_cam);
