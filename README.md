@@ -1,3 +1,7 @@
+# NOW LIVES HERE: https://github.com/ryuukk/dark
+
+---
+
 # Run the samples
 
 - Make sure you got D installed in your system
